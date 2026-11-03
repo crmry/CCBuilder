@@ -29,3 +29,18 @@ The LibreOffice runtime is MPL-2.0 and the xz decoder is MIT; review the upstrea
 
 ## Local usage
 The Builder can run from a local static server. To test the converter locally, first place the pinned upstream `web/office-converter/` into `converter/office-converter/`, then serve over HTTP (not `file://`) so its scoped service worker can run.
+
+## Unified workspace and A4 normalization
+
+The sidebar now switches between Builder and PDF Converter **within one workspace**, rather than navigating away. `/` launches the workspace in Builder mode, while `/converter/` launches it in PDF mode. The existing `main.html` Builder is embedded so its editors, autosave and print-preview code remain intact; the embedded copy hides its own sidebar. Switching panels preserves the Builder iframe and current form state.
+
+The converter includes two page-layout options:
+
+- **Apply CCBuilder A4 standard** (default): rewrites the page-size and page-margin settings for all sections of a temporary DOCX copy before passing that copy to the LibreOffice WebAssembly engine. A4 portrait, top 1.5 in, right 0.5 in, bottom 1 in, left 1 in. The original Word document remains untouched.
+- **Preserve original Word layout**: sends the original DOCX directly to the converter without changing its page settings.
+
+This conversion is **best-effort**: complex tables and page breaks can reflow when margins are changed, and PDF fidelity depends on installed fonts and LibreOffice. Review each generated PDF. The ZIP edit is performed client-side via [fflate](https://github.com/101arrowz/fflate), bundled and served from the same GitHub Pages origin (MIT).
+
+### Collapsible sidebar
+
+The shared sidebar starts as a narrow icon rail on desktop. Hover over it to reveal **Builder** and **PDF Converter**, or click the hamburger icon to pin it open. Click again to unpin and return to the compact layout. Pinned state is remembered for the current browser tab. When pinned, the workspace content shifts to make room; a temporary hover preview overlays the content without changing form state. On mobile, the hamburger opens a dismissible navigation drawer (tap outside or press Escape to close). Neither action navigates away or reloads the Builder.

@@ -65,7 +65,9 @@ async function process() {
             const f=queued[i];
             announce('Converting '+(i+1)+' of '+queued.length+': '+f.name);
             try {
-                const result=await engine.convertFile(f,'pdf');
+                const mode=document.querySelector('input[name="page-layout"]:checked')?.value || 'standard';
+                const source=mode==='standard' ? await window.CCNormalizeDocxToA4(f) : f;
+                const result=await engine.convertFile(source,'pdf');
                 if(!result.blob || !result.blob.size) throw Error('No PDF was generated.');
                 const url=URL.createObjectURL(result.blob);
                 const name=uniqueName(f.name,used);

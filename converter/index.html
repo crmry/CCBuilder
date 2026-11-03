@@ -5,18 +5,36 @@
  <meta name="description" content="Private DOCX to PDF conversion in your browser.">
  <title>PDF Converter | Citizen Charter Builder</title>
  <link rel="stylesheet" href="../assets/font-awesome/css/font-awesome.css">
- <link rel="stylesheet" href="../assets/navigation.css?v=1">
- <link rel="stylesheet" href="./converter.css?v=1">
+ <link rel="stylesheet" href="../assets/navigation.css?v=3">
+ <link rel="stylesheet" href="./converter.css?v=2">
 </head>
 <body class="cc-has-sidebar">
- <nav class="cc-sidebar" aria-label="Main navigation">
-  <div class="cc-sidebar-brand">CITIZEN CHARTER</div>
-  <div class="cc-sidebar-links">
-   <a class="cc-sidebar-link" href="../"><i class="fa fa-pencil-square-o" aria-hidden="true"></i> Builder</a>
-   <a class="cc-sidebar-link is-active" href="./" aria-current="page"><i class="fa fa-file-pdf-o" aria-hidden="true"></i> PDF Converter</a>
-  </div>
- </nav>
- <main class="cc-converter-main">
+ 
+    <button type="button" class="cc-mobile-menu-toggle" aria-controls="cc-primary-navigation" aria-expanded="false" aria-label="Open sidebar navigation" title="Open sidebar">
+        <i class="fa fa-bars" aria-hidden="true"></i>
+    </button>
+    <div class="cc-sidebar-scrim" hidden></div>
+    <nav id="cc-primary-navigation" class="cc-sidebar" aria-label="Main navigation">
+        <div class="cc-sidebar-head">
+            <button type="button" class="cc-sidebar-toggle" aria-controls="cc-primary-navigation" aria-expanded="false" aria-pressed="false" aria-label="Pin sidebar open" title="Click to pin or unpin sidebar">
+                <i class="fa fa-bars" aria-hidden="true"></i>
+            </button>
+            <div class="cc-sidebar-brand">CITIZEN CHARTER</div>
+        </div>
+        <div class="cc-sidebar-links">
+            <a class="cc-sidebar-link" href="#builder" data-view-link="builder" title="Builder">
+                <i class="fa fa-pencil-square-o" aria-hidden="true"></i><span class="cc-sidebar-label">Builder</span>
+            </a>
+            <a class="cc-sidebar-link is-active" href="#pdf" data-view-link="pdf" aria-current="page" title="PDF Converter">
+                <i class="fa fa-file-pdf-o" aria-hidden="true"></i><span class="cc-sidebar-label">PDF Converter</span>
+            </a>
+        </div>
+    </nav>
+
+ <section id="builder-view" class="cc-builder-view" aria-label="Citizen Charter Builder workspace" hidden>
+  <iframe id="builder-frame" title="Citizen Charter Builder" src="../main.html?embedded=1" loading="eager"></iframe>
+ </section>
+ <main id="converter-view" class="cc-converter-main">
   <header><h1>PDF CONVERTER</h1><p class="cc-muted">Convert Microsoft Word documents to PDF securely in your browser.</p></header>
   <section class="cc-card" aria-labelledby="upload-title">
    <h2 id="upload-title">Word to PDF</h2>
@@ -28,6 +46,12 @@
     <small>DOCX only · Up to 20 files · Maximum 50 MB per file</small>
    </div>
    <input class="cc-sr-only" id="file-input" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple aria-label="Choose Word files">
+   <fieldset class="cc-layout-options" aria-label="PDF page layout">
+    <legend>PDF page layout</legend>
+    <label><input type="radio" name="page-layout" value="standard" checked> <span><strong>Apply CCBuilder A4 standard</strong><small>Top 1.5″ · Right 0.5″ · Bottom 1″ · Left 1″ · Portrait</small></span></label>
+    <label><input type="radio" name="page-layout" value="original"> <span><strong>Preserve original Word layout</strong><small>Keep the DOCX page size and margins as defined in the document</small></span></label>
+    <p class="cc-layout-warning">Changing paper size or margins may reflow wide tables, headers, and page breaks. Inspect the converted PDF before use.</p>
+   </fieldset>
    <div class="cc-controls">
     <button type="button" id="convert-button" class="cc-btn cc-primary" disabled><i class="fa fa-file-pdf-o" aria-hidden="true"></i> Convert to PDF</button>
     <button type="button" id="clear-button" class="cc-btn cc-secondary" disabled>Clear Files</button>
@@ -44,6 +68,10 @@
   </section>
   <footer class="cc-footer">Citizen Charter Builder · Powered by LibreOffice WebAssembly · <a href="https://github.com/Skitionek/serverless-office-converter" rel="noopener noreferrer" target="_blank">Engine source</a></footer>
  </main>
- <script type="module" src="./converter.js?v=1"></script>
+ <script src="./vendor/fflate.min.js"></script>
+ <script src="./normalize-docx.js?v=2" defer></script>
+ <script src="../assets/sidebar.js?v=3" defer></script>
+ <script src="./workspace.js?v=2" defer></script>
+ <script type="module" src="./converter.js?v=2"></script>
 </body>
 </html>
