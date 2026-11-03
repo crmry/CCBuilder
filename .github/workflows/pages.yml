@@ -1,0 +1,59 @@
+name: Build and deploy CCBuilder
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out CCBuilder
+        uses: actions/checkout@v4
+      - name: Fetch pinned LibreOffice WebAssembly converter
+        uses: actions/checkout@v4
+        with:
+          repository: Skitionek/serverless-office-converter
+          ref: cd6c4a13e67f5b03063bc8094c5406b1d7efe1d5
+          path: _vendor-converter
+          persist-credentials: false
+      - name: Assemble static site
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p _site
+          cp -a index.html main.html assets data converter _site/
+          cp -a _vendor-converter/web/office-converter _site/converter/office-converter
+          touch _site/.nojekyll
+          test -f _site/index.html
+          test -f _site/converter/index.html
+          test -f _site/converter/office-converter/lo/manifest.json
+          test -f _site/converter/office-converter/lo/soffice.wasm.xz.000
+          test -f _site/converter/office-converter/service-worker.js
+      - name: Configure GitHub Pages
+        if: github.event_name != 'pull_request'
+        uses: actions/configure-pages@v5
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

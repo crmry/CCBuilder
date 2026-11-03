@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+ <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+ <meta name="description" content="Private DOCX to PDF conversion in your browser.">
+ <title>PDF Converter | Citizen Charter Builder</title>
+ <link rel="stylesheet" href="../assets/font-awesome/css/font-awesome.css">
+ <link rel="stylesheet" href="../assets/navigation.css?v=1">
+ <link rel="stylesheet" href="./converter.css?v=1">
+</head>
+<body class="cc-has-sidebar">
+ <nav class="cc-sidebar" aria-label="Main navigation">
+  <div class="cc-sidebar-brand">CITIZEN CHARTER</div>
+  <div class="cc-sidebar-links">
+   <a class="cc-sidebar-link" href="../"><i class="fa fa-pencil-square-o" aria-hidden="true"></i> Builder</a>
+   <a class="cc-sidebar-link is-active" href="./" aria-current="page"><i class="fa fa-file-pdf-o" aria-hidden="true"></i> PDF Converter</a>
+  </div>
+ </nav>
+ <main class="cc-converter-main">
+  <header><h1>PDF CONVERTER</h1><p class="cc-muted">Convert Microsoft Word documents to PDF securely in your browser.</p></header>
+  <section class="cc-card" aria-labelledby="upload-title">
+   <h2 id="upload-title">Word to PDF</h2>
+   <p class="cc-muted">Drag in DOCX files, or browse your computer. Documents never leave your device.</p>
+   <div class="cc-drop-zone" id="drop-zone" tabindex="0" role="button" aria-label="Select or drop Word DOCX files" aria-disabled="true">
+    <i class="fa fa-cloud-upload" aria-hidden="true"></i>
+    <strong>Drag &amp; Drop DOCX Files Here</strong><span>or click to browse files</span>
+    <span class="cc-picker-label">Choose Files</span>
+    <small>DOCX only · Up to 20 files · Maximum 50 MB per file</small>
+   </div>
+   <input class="cc-sr-only" id="file-input" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple aria-label="Choose Word files">
+   <div class="cc-controls">
+    <button type="button" id="convert-button" class="cc-btn cc-primary" disabled><i class="fa fa-file-pdf-o" aria-hidden="true"></i> Convert to PDF</button>
+    <button type="button" id="clear-button" class="cc-btn cc-secondary" disabled>Clear Files</button>
+   </div>
+   <p class="cc-private"><i class="fa fa-shield"></i> Local processing · No uploads or document storage</p>
+   <p id="engine-status" class="cc-status" role="status" aria-live="polite">Preparing converter...</p>
+  </section>
+  <section id="files-section" class="cc-card" hidden aria-labelledby="files-title">
+   <h2 id="files-title">Your documents</h2>
+   <p class="cc-muted">Download converted PDFs below. Output is stored only in memory until you clear it or leave.</p>
+   <ul id="file-list" class="cc-file-list"></ul>
+   <button id="download-all-button" class="cc-btn cc-secondary" type="button" hidden>Download All PDFs</button>
+   <p id="download-note" class="cc-muted" hidden>Your browser may ask to allow multiple downloads. Individual download links remain available.</p>
+  </section>
+  <footer class="cc-footer">Citizen Charter Builder · Powered by LibreOffice WebAssembly · <a href="https://github.com/Skitionek/serverless-office-converter" rel="noopener noreferrer" target="_blank">Engine source</a></footer>
+ </main>
+ <script type="module" src="./converter.js?v=1"></script>
+</body>
+</html>
