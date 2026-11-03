@@ -40,3 +40,7 @@ The converter includes two page-layout options:
 - **Preserve original Word layout**: sends the original DOCX directly to the converter without changing its page settings.
 
 This conversion is **best-effort**: complex tables and page breaks can reflow when margins are changed, and PDF fidelity depends on installed fonts and LibreOffice. Review each generated PDF. The ZIP edit is performed client-side via [fflate](https://github.com/101arrowz/fflate), bundled and served from the same GitHub Pages origin (MIT).
+
+### Collapsible sidebar
+
+The shared sidebar starts as a narrow icon rail on desktop. Hover over it to reveal **Builder** and **PDF Converter**, or click the hamburger icon to pin it open. Click again to unpin and return to the compact layout. Pinned state is remembered for the current browser tab. When pinned, the workspace content shifts to make room; a temporary hover preview overlays the content without changing form state. On mobile, the hamburger opens a dismissible navigation drawer (tap outside or press Escape to close). Neither action navigates away or reloads the Builder.
