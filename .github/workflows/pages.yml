@@ -23,6 +23,11 @@ jobs:
           ref: cd6c4a13e67f5b03063bc8094c5406b1d7efe1d5
           path: _vendor-converter
           persist-credentials: false
+      - name: Bundle local DOCX ZIP editor (fflate 0.8.2)
+        shell: bash
+        run: |
+          npm install --prefix _zip-package --no-save --ignore-scripts fflate@0.8.2
+          test -f _zip-package/node_modules/fflate/umd/index.js
       - name: Assemble static site
         shell: bash
         run: |
@@ -30,12 +35,18 @@ jobs:
           mkdir -p _site
           cp -a index.html main.html assets data converter _site/
           cp -a _vendor-converter/web/office-converter _site/converter/office-converter
+          mkdir -p _site/converter/vendor
+          cp _zip-package/node_modules/fflate/umd/index.js _site/converter/vendor/fflate.min.js
           touch _site/.nojekyll
           test -f _site/index.html
           test -f _site/converter/index.html
           test -f _site/converter/office-converter/lo/manifest.json
           test -f _site/converter/office-converter/lo/soffice.wasm.xz.000
           test -f _site/converter/office-converter/service-worker.js
+          test -f _site/converter/vendor/fflate.min.js
+          node --check converter/workspace.js
+          node --check converter/normalize-docx.js
+          node --check converter/converter.js
       - name: Configure GitHub Pages
         if: github.event_name != 'pull_request'
         uses: actions/configure-pages@v5

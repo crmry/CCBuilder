@@ -19,3 +19,11 @@ body.cc-has-sidebar #page-wrapper { box-sizing: border-box !important; min-width
 }
 @media (max-width:420px) { .cc-sidebar-brand { max-width: 85px; } .cc-sidebar-link { font-size: 11px; padding: 9px 5px; } }
 @media print { .cc-sidebar { display: none !important; } body.cc-has-sidebar #page-wrapper { padding-left: 0 !important; } }
+
+/* The shell is the only visible navigation when the Builder is embedded. */
+html.cc-embedded .cc-sidebar { display: none !important; }
+html.cc-embedded body.cc-has-sidebar #page-wrapper { padding-left: 0 !important; }
+.cc-builder-view { margin-left: var(--cc-nav-width); height: 100vh; background: #f1f5f9; }
+.cc-builder-view iframe { border: 0; display: block; width: 100%; height: 100%; background: #f1f5f9; }
+@media(max-width:780px) { .cc-builder-view { margin-left: 0; height: calc(100vh - 65px); } }
+@media print { .cc-builder-view { margin: 0; height: auto; } }
