@@ -32,7 +32,7 @@ The Builder can run from a local static server. To test the converter locally, f
 
 ## Unified workspace and A4 normalization
 
-The sidebar now switches between Builder and PDF Converter **within one workspace**, rather than navigating away. `/` launches the workspace in Builder mode, while `/converter/` launches it in PDF mode. The existing `main.html` Builder is embedded so its editors, autosave and print-preview code remain intact; the embedded copy hides its own sidebar. Switching panels preserves the Builder iframe and current form state.
+Builder and PDF Converter retain the same collapsible sidebar and navigate in the **same browser tab**. `/` opens `main.html` directly, while `/converter/` opens the PDF converter. The prior embedded Builder iframe was removed after cross-origin isolation (needed by LibreOffice) prevented it from loading. Changing between pages reloads the page; save any unsaved Builder edits before navigating.
 
 The converter includes two page-layout options:
 
@@ -55,3 +55,7 @@ The fallback is offered even when cross-origin isolation cannot be enabled or Li
 
 ### Standalone browser PDF output (November 2026)
 The fallback no longer depends on jsPDF (which previously failed to load on GitHub Pages). It encodes page JPEGs into a minimal PDF file locally using browser Blob and typed arrays. The PDF remains image-based and is not text-searchable; check page layout before official use.
+
+## A4 browser-fallback content placement (November 4, 2026)
+
+For **Apply CCBuilder A4 standard**, the browser fallback now detects the rendered visible page content (including headers and footers), removes blank whitespace around it, and places it **without distortion** inside the A4 printable rectangle: 38.1 mm from top, 25.4 mm from left, 12.7 mm from right and 25.4 mm from bottom. The image-based renderer can shrink contents to fit and cannot guarantee Word's exact pagination. This bounds enforcement is specific to the fallback; the higher-fidelity LibreOffice path uses OOXML margin normalization instead. **Preserve original Word layout** retains full rendered pages rather than enforcing CCBuilder margins.
