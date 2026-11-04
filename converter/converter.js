@@ -151,47 +151,53 @@ clear.addEventListener('click',()=>{
     files=[]; release(); list.replaceChildren(); section.hidden=true;
     downloadAll.hidden=true;note.hidden=true;announce('Files cleared. Nothing was saved.');controls();
 });
-window.addEventListener('pagehide',release);
+window.addEventListener('pagehide',()=>{release(); files=[]; engine?.stop?.('Converter page closed.');});
 async function init() {
     ready=true;
     controls();
-    announce('Checking LibreOffice support. Browser fallback is available even if it fails.');
-    setEngineHint('Automatic uses LibreOffice first, then switches to browser rendering if necessary.');
+    announce('Initializing private browser conversion...');
+    setEngineHint('Automatic prefers LibreOffice when deployed; the browser renderer works without its WebAssembly files.');
+    // The scoped worker handles versioned runtime library caches, not document data.
+    // Register it even when the optional LibreOffice engine has not been deployed.
+    if ('serviceWorker' in navigator) {
+        try {
+            const registration=await navigator.serviceWorker.register('./sw.js');
+            registration.update().catch(error=>console.warn('Runtime worker update check:',error));
+        } catch (error) {
+            console.warn('Runtime cache service worker unavailable; browser renderer can still run.',error);
+        }
+    }
     try {
-        const {OfficeEngine,ensureCrossOriginIsolation}=await import('./office-converter/index.js');
-        if(!('serviceWorker' in navigator)){
-            officeFailure='Service workers are not supported by this browser.';
-            announce('Browser conversion ready. LibreOffice unavailable: '+officeFailure);
-            return;
-        }
-        // Update old Pages service workers on repeat visits, avoiding stale asset intercepts.
-        const reg=await navigator.serviceWorker.getRegistration('./');
-        if(reg) await reg.update().catch(e=>console.warn('Service worker update',e));
-        const isolated=await ensureCrossOriginIsolation('./sw.js');
-        if(!isolated){
-            officeFailure='Cross-origin isolation was not enabled after service worker startup.';
-            announce('Browser fallback ready. LibreOffice needs cross-origin isolation.');
-            return;
-        }
-        // Detect missing asset deployment early rather than yielding a generic worker error.
-        for(const relative of ['office-converter/engine-worker.js','office-converter/lo/manifest.json']){
+        // Check that deployment actually contains *all* prerequisite entrypoints.
+        // If Pages is published from a branch, these usually return 404:
+        // don't try to initialize LibreOffice at all, and keep the fallback ready.
+        for (const relative of [
+            'office-converter/index.js',
+            'office-converter/engine-worker.js',
+            'office-converter/lo/manifest.json',
+            'office-converter/lo/soffice.wasm.xz.000'
+        ]) {
             const response=await fetch(relative,{cache:'no-store'});
-            if(!response.ok)throw Error(relative+' returned HTTP '+response.status);
+            if (!response.ok) throw Error(relative+' returned HTTP '+response.status);
         }
+        const {OfficeEngine,ensureCrossOriginIsolation}=await import('./office-converter/index.js');
+        const isolated=await ensureCrossOriginIsolation('./sw.js');
+        if (!isolated) throw Error('Cross-origin isolation could not be established for LibreOffice.');
         engine=new OfficeEngine({base:new URL('./office-converter/',import.meta.url)});
-        engine.addEventListener('state',e=>{
-            if(e.detail.state==='loading')announce('Loading LibreOffice WebAssembly locally...');
-            if(e.detail.state==='error') {
-                officeFailure=e.detail.detail || e.detail.text || 'Unknown worker error';
-                announce('LibreOffice issue: '+officeFailure+'. Automatic mode will use browser fallback.',true);
+        engine.addEventListener('state',event=>{
+            if (event.detail.state==='loading') announce('Loading and caching local LibreOffice runtime...');
+            if (event.detail.state==='error') {
+                officeFailure=event.detail.detail || event.detail.text || 'Unknown worker error';
+                announce('LibreOffice unavailable: '+officeFailure+'. Browser fallback remains available.',true);
             }
         });
-        announce('Ready. LibreOffice will load on first conversion; automatic fallback is enabled.');
-    }catch(e){
-        officeFailure=e?.message||String(e);
-        console.warn('LibreOffice initialization unavailable; browser fallback remains enabled',e);
-        announce('Browser fallback ready. LibreOffice unavailable: '+officeFailure);
-        setEngineHint('LibreOffice initialization failed: '+officeFailure+'. Automatic and Browser modes will still use local conversion.');
+        announce('Ready. LibreOffice runtime is available; automatic browser fallback enabled.');
+        setEngineHint('LibreOffice uses versioned runtime caching. Your DOCX and output PDF stay in page memory only.');
+    } catch(error) {
+        officeFailure=error?.message||String(error);
+        console.warn('Optional LibreOffice runtime unavailable:',error);
+        announce('Browser fallback ready. LibreOffice not deployed: '+officeFailure);
+        setEngineHint('GitHub Pages has not published LibreOffice. Browser conversion runs locally; use GitHub Actions Pages to install the optional engine.');
     } finally {controls();}
 }
 controls();init();
