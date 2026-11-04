@@ -6,13 +6,18 @@ const zone=$('drop-zone'), input=$('file-input'), convert=$('convert-button'), c
 const downloadAll=$('download-all-button'), note=$('download-note');
 const status=$('engine-status'), section=$('files-section'), list=$('file-list');
 const LIMIT_COUNT=20, LIMIT_BYTES=50*1024*1024;
-let files=[], results=[], urls=[], engine=null, ready=false, working=false;
+const engineMode=$('engine-mode'), engineHint=$('engine-hint');
+const OFFICE_TIMEOUT_MS=150000;
+let officeFailure=null;
+let browserFallback=null;
+let files=[], results=[], urls=[], engine=null, ready=true, working=false;
 
 function announce(message, error=false) {
     status.textContent=message;
     status.classList.toggle('is-error',error);
 }
 function controls() {
+    if(engineMode)engineMode.disabled=working;
     convert.disabled=!ready || working || files.length===0;
     clear.disabled=working || (!files.length && !results.length);
     zone.setAttribute('aria-disabled', String(!ready || working));
@@ -57,6 +62,44 @@ function uniqueName(name, used) {
     while(used.has(candidate.toLowerCase())) candidate=stem+' ('+(n++)+').pdf';
     used.add(candidate.toLowerCase()); return candidate;
 }
+async function loadFallback(){
+    if(!browserFallback)browserFallback=import('./browser-fallback.js');
+    return browserFallback;
+}
+function setEngineHint(message){if(engineHint)engineHint.textContent=message;}
+async function convertOffice(source){
+    if(!engine) throw Error(officeFailure || 'LibreOffice is not available.');
+    let timer;
+    try {
+        const work=engine.convertFile(source,'pdf');
+        return await Promise.race([work,new Promise((_,reject)=>{
+            timer=setTimeout(()=>reject(Error('LibreOffice engine did not start or respond within 150 seconds.')),OFFICE_TIMEOUT_MS);
+        })]);
+    } catch(e) {
+        // Release a hung WASM worker before trying the HTML renderer.
+        engine.stop?.('LibreOffice timed out or failed.');
+        throw e;
+    } finally { clearTimeout(timer); }
+}
+async function convertDocument(source,standard){
+    const selected=engineMode?.value || 'auto';
+    if(selected==='browser'){
+        const fallback=await loadFallback();
+        return fallback.convertWithBrowser(source,{standard,onProgress:message=>announce(message)});
+    }
+    try {
+        const result=await convertOffice(source);
+        return {...result,engine:'libreoffice'};
+    } catch(error) {
+        officeFailure=error?.message || String(error);
+        console.warn('LibreOffice conversion failed',error);
+        if(selected==='libreoffice')throw error;
+        announce('LibreOffice failed ('+officeFailure+'). Using browser fallback...');
+        setEngineHint('LibreOffice unavailable: '+officeFailure+'. Auto mode uses the browser renderer instead.');
+        const fallback=await loadFallback();
+        return fallback.convertWithBrowser(source,{standard,onProgress:message=>announce(message)});
+    }
+}
 async function process() {
     if(!ready || working || !files.length) return;
     working=true; controls(); release(); list.replaceChildren(); section.hidden=false;
@@ -68,12 +111,12 @@ async function process() {
             try {
                 const mode=document.querySelector('input[name="page-layout"]:checked')?.value || 'standard';
                 const source=mode==='standard' ? await window.CCNormalizeDocxToA4(f) : f;
-                const result=await engine.convertFile(source,'pdf');
+                const result=await convertDocument(source,mode==='standard');
                 if(!result.blob || !result.blob.size) throw Error('No PDF was generated.');
                 const url=URL.createObjectURL(result.blob);
                 const name=uniqueName(f.name,used);
                 urls.push(url); results.push({url,name}); ok++;
-                row(f.name,'Converted · '+size(result.blob.size),false,{url,name});
+                row(f.name,'Converted with '+(result.engine==='browser'?'browser fallback (image-based PDF)':'LibreOffice')+' · '+size(result.blob.size),false,{url,name});
             } catch(e) {
                 row(f.name,'Failed: '+(e?.message||String(e)),true);
             }
@@ -110,23 +153,45 @@ clear.addEventListener('click',()=>{
 });
 window.addEventListener('pagehide',release);
 async function init() {
-    announce('Setting up private local conversion...');
+    ready=true;
+    controls();
+    announce('Checking LibreOffice support. Browser fallback is available even if it fails.');
+    setEngineHint('Automatic uses LibreOffice first, then switches to browser rendering if necessary.');
     try {
-        announce('Checking LibreOffice converter files...');
-        const { OfficeEngine, ensureCrossOriginIsolation } = await import('./office-converter/index.js');
-        announce('Setting up private local conversion...');
+        const {OfficeEngine,ensureCrossOriginIsolation}=await import('./office-converter/index.js');
+        if(!('serviceWorker' in navigator)){
+            officeFailure='Service workers are not supported by this browser.';
+            announce('Browser conversion ready. LibreOffice unavailable: '+officeFailure);
+            return;
+        }
+        // Update old Pages service workers on repeat visits, avoiding stale asset intercepts.
+        const reg=await navigator.serviceWorker.getRegistration('./');
+        if(reg) await reg.update().catch(e=>console.warn('Service worker update',e));
         const isolated=await ensureCrossOriginIsolation('./sw.js');
-        if(!isolated) { announce('Local conversion requires a modern desktop browser with service workers enabled.',true);return; }
+        if(!isolated){
+            officeFailure='Cross-origin isolation was not enabled after service worker startup.';
+            announce('Browser fallback ready. LibreOffice needs cross-origin isolation.');
+            return;
+        }
+        // Detect missing asset deployment early rather than yielding a generic worker error.
+        for(const relative of ['office-converter/engine-worker.js','office-converter/lo/manifest.json']){
+            const response=await fetch(relative,{cache:'no-store'});
+            if(!response.ok)throw Error(relative+' returned HTTP '+response.status);
+        }
         engine=new OfficeEngine({base:new URL('./office-converter/',import.meta.url)});
         engine.addEventListener('state',e=>{
-            if(e.detail.state==='loading')announce('Loading LibreOffice locally (the first visit may take longer)...');
-            if(e.detail.state==='error')announce('Engine error: '+(e.detail.text||'Unknown error'),true);
+            if(e.detail.state==='loading')announce('Loading LibreOffice WebAssembly locally...');
+            if(e.detail.state==='error') {
+                officeFailure=e.detail.detail || e.detail.text || 'Unknown worker error';
+                announce('LibreOffice issue: '+officeFailure+'. Automatic mode will use browser fallback.',true);
+            }
         });
-        ready=true;announce('Ready. Drop DOCX files to convert them locally.');
+        announce('Ready. LibreOffice will load on first conversion; automatic fallback is enabled.');
     }catch(e){
-        console.error('CCBuilder PDF converter initialization failed',e);
-        announce('Converter unavailable: '+(e?.message||String(e))+'. Try a hard refresh (Ctrl+Shift+R). If the issue persists, check that the LibreOffice engine files deployed successfully.',true);
-    }
-    controls();
+        officeFailure=e?.message||String(e);
+        console.warn('LibreOffice initialization unavailable; browser fallback remains enabled',e);
+        announce('Browser fallback ready. LibreOffice unavailable: '+officeFailure);
+        setEngineHint('LibreOffice failed initialization; choose Automatic or Browser to convert locally.');
+    } finally {controls();}
 }
 controls();init();
