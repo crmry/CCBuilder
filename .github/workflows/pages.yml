@@ -28,6 +28,15 @@ jobs:
         run: |
           npm install --prefix _zip-package --no-save --ignore-scripts fflate@0.8.2
           test -f _zip-package/node_modules/fflate/umd/index.js
+      - name: Bundle offline browser fallback dependencies
+        shell: bash
+        run: |
+          npm install --prefix _pdf-package --no-save --ignore-scripts \
+            jszip@3.10.1 docx-preview@0.4.1 html2canvas@1.4.1 jspdf@2.5.2
+          test -f _pdf-package/node_modules/jszip/dist/jszip.min.js
+          test -f _pdf-package/node_modules/docx-preview/dist/docx-preview.min.js
+          test -f _pdf-package/node_modules/html2canvas/dist/html2canvas.min.js
+          test -f _pdf-package/node_modules/jspdf/dist/jspdf.umd.min.js
       - name: Assemble static site
         shell: bash
         run: |
@@ -37,6 +46,20 @@ jobs:
           cp -a _vendor-converter/web/office-converter _site/converter/office-converter
           mkdir -p _site/converter/vendor
           cp _zip-package/node_modules/fflate/umd/index.js _site/converter/vendor/fflate.min.js
+          cp _pdf-package/node_modules/jszip/dist/jszip.min.js _site/converter/vendor/jszip.min.js
+          cp _pdf-package/node_modules/docx-preview/dist/docx-preview.min.js _site/converter/vendor/docx-preview.min.js
+          cp _pdf-package/node_modules/html2canvas/dist/html2canvas.min.js _site/converter/vendor/html2canvas.min.js
+          cp _pdf-package/node_modules/jspdf/dist/jspdf.umd.min.js _site/converter/vendor/jspdf.umd.min.js
+          # Improve LibreOffice worker startup diagnostics while retaining upstream pinned runtime.
+          python3 - <<'PY'
+          from pathlib import Path
+          file = Path('_site/converter/office-converter/office-engine.js')
+          code = file.read_text()
+          old = "event.message || 'The engine worker could not be started.'"
+          new = "(event.message || 'Worker script failed') + (event.filename ? ' [' + event.filename + ':' + event.lineno + ']' : '')"
+          assert old in code, 'Expected upstream LibreOffice worker error handler missing'
+          file.write_text(code.replace(old, new))
+          PY
           touch _site/.nojekyll
           test -f _site/index.html
           test -f _site/converter/index.html
@@ -44,6 +67,11 @@ jobs:
           test -f _site/converter/office-converter/lo/soffice.wasm.xz.000
           test -f _site/converter/office-converter/service-worker.js
           test -f _site/converter/vendor/fflate.min.js
+          test -f _site/converter/vendor/jszip.min.js
+          test -f _site/converter/vendor/docx-preview.min.js
+          test -f _site/converter/vendor/html2canvas.min.js
+          test -f _site/converter/vendor/jspdf.umd.min.js
+          node --check converter/browser-fallback.js
           node --check converter/workspace.js
           node --check converter/normalize-docx.js
           node --check converter/converter.js
