@@ -74,6 +74,7 @@ jobs:
           node --check converter/browser-fallback-v6.js
           node --check converter/browser-fallback-v7.js
           node --check converter/browser-fallback-v8.js
+          node --check converter/browser-fallback-v9.js
           node --check converter/browser-fallback.js
           node --check converter/workspace.js
           node --check converter/normalize-docx.js
