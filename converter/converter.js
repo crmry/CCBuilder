@@ -63,7 +63,7 @@ function uniqueName(name, used) {
     used.add(candidate.toLowerCase()); return candidate;
 }
 async function loadFallback(){
-    if(!browserFallback)browserFallback=import('./browser-fallback-v4.js?build=160023b');
+    if(!browserFallback)browserFallback=import('./browser-fallback-v5.js?build=db8b0d0');
     return browserFallback;
 }
 function setEngineHint(message){if(engineHint)engineHint.textContent=message;}
