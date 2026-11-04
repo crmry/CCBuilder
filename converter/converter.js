@@ -215,8 +215,8 @@ window.addEventListener('pagehide',()=>{release(); files=[]; engine?.stop?.('Con
 async function init() {
     ready=true;
     controls();
-    announce('Initializing private browser conversion...');
-    setEngineHint('Automatic prefers LibreOffice when deployed; the browser renderer works without its WebAssembly files.');
+    announce('Preparing converter...');
+    setEngineHint('Automatic uses LibreOffice when available and switches to the browser fallback if needed.');
     // The scoped worker handles versioned runtime library caches, not document data.
     // Register it even when the optional LibreOffice engine has not been deployed.
     if ('serviceWorker' in navigator) {
@@ -253,13 +253,13 @@ async function init() {
                 announce('LibreOffice unavailable: '+officeFailure+'. Browser fallback remains available.',true);
             }
         });
-        announce('Ready. LibreOffice runtime is available; automatic browser fallback enabled.');
-        setEngineHint('LibreOffice uses versioned runtime caching. Your DOCX and output PDF stay in page memory only.');
+        announce('Ready to convert.');
+        setEngineHint('LibreOffice files detected. Automatic mode will fall back if conversion fails.');
     } catch(error) {
         officeFailure=error?.message||String(error);
         console.warn('Optional LibreOffice runtime unavailable:',error);
-        announce('Browser fallback ready. LibreOffice not deployed: '+officeFailure);
-        setEngineHint('GitHub Pages has not published LibreOffice. Browser conversion runs locally; use GitHub Actions Pages to install the optional engine.');
+        announce('Ready to convert using the browser renderer.');
+        setEngineHint('LibreOffice unavailable. Automatic mode will use the browser renderer.');
     } finally {controls();}
 }
 controls();init();
