@@ -55,20 +55,46 @@
     }
 
     window.CCNormalizeDocxToA4 = async file => {
-        if (!window.fflate) throw new Error('Local DOCX layout library is unavailable.');
-        const bytes = new Uint8Array(await file.arrayBuffer());
-        const parts = await new Promise((resolve, reject) =>
-            window.fflate.unzip(bytes, (error, contents) => error ? reject(error) : resolve(contents)));
-        const original = parts['word/document.xml'];
-        if (!original || !parts['[Content_Types].xml']) throw new Error('This is not a valid DOCX file.');
-        const parser = new DOMParser();
-        const xml = parser.parseFromString(window.fflate.strFromU8(original), 'application/xml');
-        if (xml.getElementsByTagName('parsererror').length)
-            throw new Error('The Word file has invalid document XML.');
-        fixPageSettings(xml);
-        parts['word/document.xml'] = window.fflate.strToU8(new XMLSerializer().serializeToString(xml));
-        const zipped = await new Promise((resolve, reject) =>
-            window.fflate.zip(parts, { level: 6 }, (error, output) => error ? reject(error) : resolve(output)));
+        // JSZip is also bundled for docx-preview. Use it when fflate fails to load
+        // (e.g. an older or partially updated GitHub Pages service-worker cache).
+        let zipped;
+        if (window.fflate) {
+            const bytes = new Uint8Array(await file.arrayBuffer());
+            const parts = await new Promise((resolve, reject) =>
+                window.fflate.unzip(bytes, (error, contents) => error ? reject(error) : resolve(contents)));
+            const original = parts['word/document.xml'];
+            if (!original || !parts['[Content_Types].xml']) throw new Error('This is not a valid DOCX file.');
+            const parser = new DOMParser();
+            const xml = parser.parseFromString(window.fflate.strFromU8(original), 'application/xml');
+            if (xml.getElementsByTagName('parsererror').length)
+                throw new Error('The Word file has invalid document XML.');
+            fixPageSettings(xml);
+            parts['word/document.xml'] = window.fflate.strToU8(new XMLSerializer().serializeToString(xml));
+            zipped = await new Promise((resolve, reject) =>
+                window.fflate.zip(parts, { level: 6 }, (error, output) => error ? reject(error) : resolve(output)));
+        } else {
+            // Load locally from the deployed Pages artifact, never a document-upload service.
+            if (!window.JSZip) {
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = './vendor/jszip.min.js';
+                    script.onload = resolve;
+                    script.onerror = () => reject(new Error('DOCX ZIP libraries missing from deployed site. Check GitHub Pages deployment.'));
+                    document.head.appendChild(script);
+                });
+            }
+            if (!window.JSZip) throw new Error('DOCX ZIP library not initialized.');
+            const zip = await window.JSZip.loadAsync(file);
+            if (!zip.file('word/document.xml') || !zip.file('[Content_Types].xml'))
+                throw new Error('This is not a valid DOCX file.');
+            const parser = new DOMParser();
+            const xml = parser.parseFromString(await zip.file('word/document.xml').async('string'),'application/xml');
+            if (xml.getElementsByTagName('parsererror').length)
+                throw new Error('The Word file has invalid document XML.');
+            fixPageSettings(xml);
+            zip.file('word/document.xml', new XMLSerializer().serializeToString(xml));
+            zipped = await zip.generateAsync({type:'uint8array',compression:'DEFLATE',compressionOptions:{level:6}});
+        }
         return new File([zipped], file.name, {
             type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             lastModified: file.lastModified
