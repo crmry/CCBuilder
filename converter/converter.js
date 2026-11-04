@@ -6,6 +6,8 @@ const zone=$('drop-zone'), input=$('file-input'), convert=$('convert-button'), c
 const downloadAll=$('download-all-button'), note=$('download-note');
 const status=$('engine-status'), section=$('files-section'), list=$('file-list');
 const overlay=$('convert-overlay'), overlayText=$('convert-overlay-text');
+const addMore=$('add-more-button'), cancelButton=$('cancel-conversion-button'), overlayNote=$('convert-overlay-note');
+let cancelRequested=false;
 const LIMIT_COUNT=20, LIMIT_BYTES=50*1024*1024;
 const engineMode=$('engine-mode'), engineHint=$('engine-hint');
 const OFFICE_TIMEOUT_MS=150000;
@@ -27,12 +29,14 @@ function controls() {
     if(engineMode)engineMode.disabled=working;
     convert.disabled=!ready || working || files.length===0;
     clear.disabled=working || (!files.length && !results.length);
+    if(addMore)addMore.disabled=working || !ready || files.length>=LIMIT_COUNT;
+    if(cancelButton)cancelButton.disabled=!working || cancelRequested;
     zone.setAttribute('aria-disabled', String(!ready || working));
 }
 function size(bytes) {
     return bytes < 1048576 ? (bytes/1024).toFixed(1)+' KB' : (bytes/1048576).toFixed(1)+' MB';
 }
-function row(name, message, error=false, output=null) {
+function row(name, message, error=false, output=null, removeIndex=null) {
     const li=document.createElement('li'); li.className='cc-file-row';
     const div=document.createElement('div');
     const title=document.createElement('div'); title.className='cc-file-name'; title.textContent=name;
@@ -42,14 +46,27 @@ function row(name, message, error=false, output=null) {
         const a=document.createElement('a'); a.className='cc-download-link';
         a.textContent='Download PDF'; a.href=output.url; a.download=output.name; li.append(a);
     }
+    if(removeIndex!==null){
+        const button=document.createElement('button');
+        button.type='button'; button.className='cc-remove-file';
+        button.textContent='Remove ×'; button.setAttribute('aria-label','Remove '+name);
+        button.addEventListener('click',()=>removeFile(removeIndex));
+        li.append(button);
+    }
     list.append(li);
+}
+function removeFile(index){
+    if(working || index<0 || index>=files.length)return;
+    const [removed]=files.splice(index,1);
+    release(); render();
+    announce(removed.name+' removed from the selection. The original DOCX was not changed.');
 }
 function release() {
     urls.forEach(URL.revokeObjectURL); urls=[]; results=[];
 }
 function render() {
     list.replaceChildren();
-    files.forEach(f=>row(f.name,size(f.size)+' · Ready to convert'));
+    files.forEach((f,i)=>row(f.name,size(f.size)+' · Ready to convert',false,null,i));
     section.hidden=files.length===0; downloadAll.hidden=true; note.hidden=true; controls();
 }
 function add(incoming) {
@@ -75,6 +92,7 @@ async function loadFallback(){
 }
 function setEngineHint(message){if(engineHint)engineHint.textContent=message;}
 async function convertOffice(source){
+    if(cancelRequested)throw new DOMException('Conversion canceled','AbortError');
     if(!engine) throw Error(officeFailure || 'LibreOffice is not available.');
     let timer;
     try {
@@ -96,8 +114,10 @@ async function convertDocument(source,standard){
     }
     try {
         const result=await convertOffice(source);
+        if(cancelRequested)throw new DOMException('Conversion canceled','AbortError');
         return {...result,engine:'libreoffice'};
     } catch(error) {
+        if(cancelRequested || error?.name==='AbortError')throw error;
         officeFailure=error?.message || String(error);
         console.warn('LibreOffice conversion failed',error);
         if(selected==='libreoffice')throw error;
@@ -108,33 +128,54 @@ async function convertDocument(source,standard){
     }
 }
 async function process() {
-    if(!ready || working || !files.length) return;
-    working=true; controls(); release(); list.replaceChildren(); section.hidden=false;
+    if(!ready || working || !files.length)return;
+    // Confirm exact queue before conversion; no files are uploaded.
+    if(!window.confirm('Convert '+files.length+' selected DOCX file(s) to PDF?\n\n'+
+        files.map((f,i)=>(i+1)+'. '+f.name).join('\n')))return;
+    working=true;cancelRequested=false;
+    controls();release();list.replaceChildren();section.hidden=false;
     busyOverlay(true,'Preparing conversion...');
-    // Allow the loading animation to paint before starting CPU-intensive rendering.
-    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
-    const queued=files.slice(), used=new Set(); let ok=0;
     try {
-        for(let i=0;i<queued.length;i++) {
+        await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+        const queued=files.slice(), used=new Set();let ok=0,failed=0,skipped=0;
+        for(let i=0;i<queued.length;i++){
+            if(cancelRequested){skipped=queued.length-i;break;}
             const f=queued[i];
             announce('Converting '+(i+1)+' of '+queued.length+': '+f.name);
-            try {
+            try{
                 const mode=document.querySelector('input[name="page-layout"]:checked')?.value || 'standard';
                 const source=mode==='standard' ? await window.CCNormalizeDocxToA4(f) : f;
+                if(cancelRequested){skipped=queued.length-i;break;}
                 const result=await convertDocument(source,mode==='standard');
-                if(!result.blob || !result.blob.size) throw Error('No PDF was generated.');
+                if(cancelRequested){skipped=queued.length-i;break;}
+                if(!result.blob || !result.blob.size)throw Error('No PDF was generated.');
                 const url=URL.createObjectURL(result.blob);
                 const name=uniqueName(f.name,used);
-                urls.push(url); results.push({url,name}); ok++;
+                urls.push(url);results.push({url,name});ok++;
                 row(f.name,'Converted with '+(result.engine==='browser'?'browser fallback (image-based PDF)':'LibreOffice')+' · '+size(result.blob.size)+(result.skippedBlankPages?' · '+result.skippedBlankPages+' blank page(s) removed':'')+(result.forcedSplits?' · Review '+result.forcedSplits+' oversized row split(s)':''),false,{url,name});
-            } catch(e) {
+            }catch(e){
+                if(cancelRequested || e?.name==='AbortError'){
+                    skipped=queued.length-i;break;
+                }
+                failed++;
                 row(f.name,'Failed: '+(e?.message||String(e)),true);
             }
+            // Yield between files so the browser can handle Cancel.
+            await new Promise(resolve=>setTimeout(resolve,0));
         }
-        downloadAll.hidden=ok<2; note.hidden=ok<2;
-        announce(ok+' of '+queued.length+' documents converted.'+(ok<queued.length?' See errors below.':''),ok<queued.length);
-    } finally {
-        working=false; files=[]; controls();
+        downloadAll.hidden=ok<2;note.hidden=ok<2;
+        if(skipped){
+            for(const f of queued.slice(queued.length-skipped))row(f.name,'Canceled · Not converted',true);
+            announce('Conversion canceled. '+ok+' completed, '+failed+' failed, '+skipped+' skipped. Completed PDFs remain downloadable.');
+        }else{
+            announce(ok+' of '+queued.length+' documents converted.'+(failed?' See errors below.':''),
+                failed>0);
+        }
+    }catch(e){
+        console.error('Conversion batch failed:',e);
+        announce('Conversion stopped: '+(e?.message||String(e)),true);
+    }finally{
+        working=false;cancelRequested=false;files=[];controls();
         busyOverlay(false);
     }
 }
@@ -151,6 +192,14 @@ for(const kind of ['dragleave','drop']) zone.addEventListener(kind,e=>{
 zone.addEventListener('drop',e=>add(e.dataTransfer?.files||[]));
 input.addEventListener('change',()=>{add(input.files||[]);input.value=''});
 convert.addEventListener('click',process);
+addMore?.addEventListener('click',()=>{if(!working)input.click()});
+cancelButton?.addEventListener('click',()=>{
+    if(!working || cancelRequested)return;
+    cancelRequested=true;
+    cancelButton.disabled=true;
+    if(overlayNote)overlayNote.textContent='Finishing the current browser rendering step, then stopping. Completed PDFs will be kept.';
+    announce('Cancel requested. Stopping after the current step...');
+});
 downloadAll.addEventListener('click',()=>{
     for(const result of results) {
         const a=document.createElement('a'); a.href=result.url; a.download=result.name;
