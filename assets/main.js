@@ -1407,8 +1407,8 @@
 		            {
 		                element: '.page-top-header',
 		                popover: {
-		                    title: '🏛️ ARTA & RA 11032 Service Standards Tour',
-		                    description: 'Welcome to the <strong>Citizen Charter Builder</strong>! Under <strong>Republic Act No. 11032</strong> (<em>Ease of Doing Business and Efficient Government Service Delivery Act of 2018</em>), all government entities are mandated to formulate, update, and post official <strong>Citizen\'s Charters</strong>.<br><br>This interactive walkthrough incorporates official <strong>ARTA guidelines, standard writing formats, and compliance requirements</strong> to ensure your service charter passes regulatory review.',
+		                    title: 'Citizen Charter Builder — Guided Tour',
+		                    description: 'This guide explains the main fields and controls for preparing a Citizen\'s Charter. Follow the steps to complete the form, review the entries, and preview the printable report.',
 		                    side: 'bottom',
 		                    align: 'start'
 		                }
@@ -1416,7 +1416,7 @@
 		            {
 		                element: '#serviceNameInput',
 		                popover: {
-		                    title: '1. Service Name (Totality of Service)',
+		                    title: 'Service Name',
 		                    description: '<strong>ARTA Standard:</strong> Must state the official title that describes the <em>totality of the service</em> (e.g., <code>ISSUANCE OF MEDICAL CERTIFICATE AND CLINICAL ABSTRACT</code>).<br><br>• <strong>Totality:</strong> Must encompass the full transaction from initial application to final release.<br>• <strong>Inter-Office / Common Services:</strong> If shared across multiple bureaus/offices, specify the issuing unit.<br>• <em>System Tip:</em> This also serves as the default filename when you save.',
 		                    side: 'bottom',
 		                    align: 'start'
@@ -1425,7 +1425,7 @@
 		            {
 		                element: '.ck-editor, #editor',
 		                popover: {
-		                    title: '2. Service Description (Purpose & Scope)',
+		                    title: 'Description',
 		                    description: '<strong>ARTA Standard:</strong> Provide a concise statement informing citizens of the exact purpose of the service, statutory legal basis/mandate, and applicable qualification criteria.<br><br>• Keep language simple, clear, and citizen-friendly.<br>• Rich formatting (bullet points, bold highlights) can be used to organize multi-part scopes.',
 		                    side: 'top',
 		                    align: 'start'
@@ -1434,7 +1434,7 @@
 		            {
 		                element: '#mainDetailsTable tbody tr:nth-child(1)',
 		                popover: {
-		                    title: '3. Office or Division (Service Provider)',
+		                    title: 'Office or Division',
 		                    description: '<strong>ARTA Standard:</strong> State the complete official name of the office, division, or unit offering the service.<br><br>• <strong>Multi-Office / Inter-Agency:</strong> If the service workflow crosses departments or external agencies, explicitly list all participating offices in the sequence of transaction.',
 		                    side: 'top',
 		                    align: 'start'
@@ -1443,7 +1443,7 @@
 		            {
 		                element: '#mainDetailsTable tbody tr:nth-child(2)',
 		                popover: {
-		                    title: '4. Classification (Mandatory 3-7-20 Limits)',
+		                    title: 'Classification',
 		                    description: '<strong>ARTA Standard (RA 11032 Sec. 9):</strong> The classification strictly dictates the maximum allowable processing time:<br><br>• 🟢 <strong>Simple:</strong> Max <strong>3 working days</strong> (ministerial actions only).<br>• 🟡 <strong>Complex:</strong> Max <strong>7 working days</strong> (requires resolution of complicated issues / technical evaluation).<br>• 🔴 <strong>Highly Technical:</strong> Max <strong>20 working days</strong> (requires specialized technical evaluation).<br><br>⚠️ <em>What NOT to do:</em> Total Processing Time cannot exceed the selected category limit, and ranging (e.g. <em>"Simple to Complex"</em>) is strictly prohibited!',
 		                    side: 'top',
 		                    align: 'start'
@@ -1452,7 +1452,7 @@
 		            {
 		                element: '#mainDetailsTable tbody tr:nth-child(3)',
 		                popover: {
-		                    title: '5. Type of Transaction (G2C / G2B / G2G)',
+		                    title: 'Type of Transaction',
 		                    description: '<strong>ARTA Standard:</strong> Classify based on the client category:<br><br>• <strong>G2C (Government to Citizen):</strong> For transactions with individual citizens or the general public.<br>• <strong>G2B (Government to Business):</strong> For transactions involving commercial firms or businesses.<br>• <strong>G2G (Government to Government):</strong> For transactions between government agencies or internal personnel.<br><br>⚠️ <em>Consistency Rule:</em> The selected type must strictly match the clients listed in <em>Who May Avail</em>.',
 		                    side: 'top',
 		                    align: 'start'
@@ -1461,7 +1461,7 @@
 		            {
 		                element: '#mainDetailsTable tbody tr:nth-child(4)',
 		                popover: {
-		                    title: '6. Who May Avail (Authorized Clients)',
+		                    title: 'Who May Avail',
 		                    description: '<strong>ARTA Standard:</strong><br><br>• If anyone is eligible without restriction, enter <strong>"All"</strong>.<br>• If restricted to specific groups or beneficiaries, enumerate all authorized clients (e.g., <em>Discharged inpatients, registered suppliers, active civil servants</em>).<br><br>⚠️ <em>Rule:</em> Spell out acronyms and avoid obscure abbreviations so the public clearly understands eligibility.',
 		                    side: 'top',
 		                    align: 'start'
@@ -1470,7 +1470,7 @@
 		            {
 		                element: '#requirementsTable',
 		                popover: {
-		                    title: '7. Checklist of Requirements & Where to Secure',
+		                    title: 'Checklist of Requirements',
 		                    description: '<strong>ARTA Prescribed Manner of Writing:</strong><br><code>Name of Document (# of copies, original/photocopy)</code><br><em>Example:</em> <code>Duly Accomplished Request Form (1 original copy)</code><br><br>• <strong>Single Copies:</strong> Explicitly state <em>"one (1)"</em> and specify whether <em>original</em> or <em>photocopy</em>.<br>• <strong>Where to Secure:</strong> Name the specific issuing office, desk, or portal (e.g. <em>PSA Serbilis Center / HIMD Receiving Desk</em>).<br>• If none needed: write <strong>"None"</strong> (never leave blank).<br><br>⚠️ <em>CRITICAL:</em> Any requirement demanded from a citizen that is not listed here is an illegal additional requirement under RA 11032!',
 		                    side: 'top',
 		                    align: 'start'
@@ -1479,7 +1479,7 @@
 		            {
 		                element: '#processOverviewTable',
 		                popover: {
-		                    title: '8. Client Steps & Agency Actions (Workflow)',
+		                    title: 'Client Steps and Agency Actions',
 		                    description: '<strong>ARTA Step-by-Step Flow Rules:</strong><br><br>• <strong>Client Steps:</strong> State what the citizen does and where (e.g., <em>"1. Submit requirements to Receiving Section"</em>). First step must be submission; last step must be claiming result.<br>• <strong>Agency Actions:</strong> Specific action taken by agency staff (e.g., <em>"1.1 Review document completeness"</em>). Use sub-numbering (1.1, 1.2) for multiple agency actions per client step.<br>• <strong>Zero Contact Policy:</strong> Minimize face-to-face interactions strictly to essential ministerial transactions.<br><br>⚠️ <em>Rule:</em> Demanding unlisted steps from clients is strictly prohibited!',
 		                    side: 'top',
 		                    align: 'start'
@@ -1488,7 +1488,7 @@
 		            {
 		                element: '#processOverviewTable tfoot',
 		                popover: {
-		                    title: '9. Fees, Time & Responsible Officer Standards',
+		                    title: 'Fees, Processing Time and Responsible Person',
 		                    description: '<strong>ARTA Specification Rules:</strong><br><br>• <strong>Fees:</strong> Type + Currency + Amount (e.g., <code>Certification Fee: PHP 50.00</code>) or <code>None</code>. ⚠️ <em>Ranging (e.g. PHP 50-100) is illegal!</em><br>• <strong>Processing Time:</strong> Exact duration in Days, Hours, Minutes (1 day = 8 working hours). ⚠️ <em>Ranging (e.g. "1-2 hours") is prohibited!</em><br>• <strong>Person Responsible:</strong> Write <strong>Designation and Office</strong> (e.g., <code>Administrative Officer V, Cashier Section</code>). If personnel rotates, use the <em>Immediate Supervisor\'s Designation and Office</em>. ⚠️ <em>Do NOT use personal employee names!</em>',
 		                    side: 'top',
 		                    align: 'start'
@@ -1497,7 +1497,7 @@
 		            {
 		                element: '.actions-panel',
 		                popover: {
-		                    title: '10. Preview, PDF Export & Compliance Actions',
+		                    title: 'Preview, Save and Other Actions',
 		                    description: '• <strong>Preview / Save as PDF:</strong> Opens the official printable report preview. Select <em>"Save as PDF"</em> in your printer dialog for crisp vector output or print directly to paper.<br>• <strong>Save:</strong> Exports a standard <code>.json</code> data backup for recordkeeping and mandatory annual updates (required by March 31 annually).<br>• <strong>Open:</strong> Loads an existing <code>.json</code> file to modify or review.<br>• <strong>Clear Form:</strong> Resets fields to draft a new charter.',
 		                    side: 'top',
 		                    align: 'center'
@@ -1506,8 +1506,8 @@
 		            {
 		                element: '#startTourNavBtn',
 		                popover: {
-		                    title: 'You\'re Ready for ARTA Compliance! 🇵🇭',
-		                    description: 'Your Citizen\'s Charter is the frontline pledge of your agency to the Filipino people.<br><br>Whenever you need to review ARTA rules again, click <strong>Take a Tour</strong> here anytime.',
+		                    title: 'Tour Complete',
+		                    description: 'You can reopen this guide anytime using <strong>Take a Tour</strong>. Review your entries and preview the output before saving or printing.',
 		                    side: 'bottom',
 		                    align: 'end',
 		                    doneBtnText: 'Finish Tour ✓',
