@@ -177,7 +177,9 @@ async function init() {
             'office-converter/lo/manifest.json',
             'office-converter/lo/soffice.wasm.xz.000'
         ]) {
-            const response=await fetch(relative,{cache:'no-store'});
+            // HEAD avoids downloading the ~23 MB compressed WASM file merely to check it exists.
+            const response=await fetch(relative,{cache:'no-store',
+                method:relative.endsWith('.xz.000')?'HEAD':'GET'});
             if (!response.ok) throw Error(relative+' returned HTTP '+response.status);
         }
         const {OfficeEngine,ensureCrossOriginIsolation}=await import('./office-converter/index.js');
