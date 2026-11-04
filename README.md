@@ -93,3 +93,9 @@ The browser DOCX fallback uses the bounding boxes of rendered Word table rows an
 ## Conversion progress overlay (build 2026-11-04.10)
 
 During DOCX conversion, the PDF workspace now displays a full-screen, opaque and accessible **Converting document...** overlay with an animated spinner and live progress text (rendering pages/finalizing). This deliberately conceals the temporary HTML rendering required by docx-preview and disables interaction during conversion. The overlay is dismissed in the conversion routine's `finally` block on both success and failure. Rendering remains local; no extra document upload or storage is introduced. CSS keeps the temporary render host measurable so html2canvas can capture it, rather than using `display:none` or `visibility:hidden` (which can result in empty PDFs).
+
+## Batch selection and cancellation (build 2026-11-04.12)
+
+The PDF Converter now displays **Remove ×** beside each queued DOCX, provides **Add More Files** and **Clear All** controls, and asks for confirmation listing the selected filenames before starting conversion. Remove/Clear All only releases browser-side references; original files on the computer are never altered.
+
+A **Cancel Conversion** action appears on the progress overlay. The browser PDF fallback checks cancellation between rendered pages and between output slices; a single synchronous docx-preview/html2canvas operation cannot be interrupted mid-operation, so the cancellation becomes effective at the next safe checkpoint. LibreOffice conversions are similarly discarded after the current conversion returns, and unstarted batch items are skipped. PDFs already completed before cancellation stay downloadable; newly incomplete results are not published. The cancel button shows that finishing the current rendering step may be necessary. No server upload or persistent document storage is introduced.
