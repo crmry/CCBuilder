@@ -87,7 +87,7 @@ function uniqueName(name, used) {
     used.add(candidate.toLowerCase()); return candidate;
 }
 async function loadFallback(){
-    if(!browserFallback)browserFallback=import('./browser-fallback-v9.js?build=7801ee5');
+    if(!browserFallback)browserFallback=import('./browser-fallback-v10.js?build=30ca45c');
     return browserFallback;
 }
 function setEngineHint(message){if(engineHint)engineHint.textContent=message;}
@@ -110,7 +110,7 @@ async function convertDocument(source,standard){
     const selected=engineMode?.value || 'auto';
     if(selected==='browser'){
         const fallback=await loadFallback();
-        return fallback.convertWithBrowser(source,{standard,onProgress:message=>announce(message)});
+        return fallback.convertWithBrowser(source,{standard,onProgress:message=>announce(message),shouldCancel:()=>cancelRequested});
     }
     try {
         const result=await convertOffice(source);
@@ -124,7 +124,7 @@ async function convertDocument(source,standard){
         announce('LibreOffice failed ('+officeFailure+'). Using browser fallback...');
         setEngineHint('LibreOffice unavailable: '+officeFailure+'. Auto mode uses the browser renderer instead.');
         const fallback=await loadFallback();
-        return fallback.convertWithBrowser(source,{standard,onProgress:message=>announce(message)});
+        return fallback.convertWithBrowser(source,{standard,onProgress:message=>announce(message),shouldCancel:()=>cancelRequested});
     }
 }
 async function process() {
