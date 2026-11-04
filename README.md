@@ -89,3 +89,7 @@ The browser fallback previously fitted every rendered section's **entire height*
 ## Converter build 2026-11-04.9: table-aware page boundaries
 
 The browser DOCX fallback uses the bounding boxes of rendered Word table rows and nearby paragraphs to choose a safe A4 page break. It prefers placing the next row on the following page rather than cutting the middle of a row. Rows taller than a printable page cannot always be kept intact; the PDF result reports unavoidable forced splits for manual review. Image-based fallback may still differ from native Word table pagination and will not repeat table headers at artificial breaks. Continue to use LibreOffice when the full runtime is published and verify official PDFs visually.
+
+## Conversion progress overlay (build 2026-11-04.10)
+
+During DOCX conversion, the PDF workspace now displays a full-screen, opaque and accessible **Converting document...** overlay with an animated spinner and live progress text (rendering pages/finalizing). This deliberately conceals the temporary HTML rendering required by docx-preview and disables interaction during conversion. The overlay is dismissed in the conversion routine's `finally` block on both success and failure. Rendering remains local; no extra document upload or storage is introduced. CSS keeps the temporary render host measurable so html2canvas can capture it, rather than using `display:none` or `visibility:hidden` (which can result in empty PDFs).
