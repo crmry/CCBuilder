@@ -191,7 +191,7 @@ async function init() {
         officeFailure=e?.message||String(e);
         console.warn('LibreOffice initialization unavailable; browser fallback remains enabled',e);
         announce('Browser fallback ready. LibreOffice unavailable: '+officeFailure);
-        setEngineHint('LibreOffice failed initialization; choose Automatic or Browser to convert locally.');
+        setEngineHint('LibreOffice initialization failed: '+officeFailure+'. Automatic and Browser modes will still use local conversion.');
     } finally {controls();}
 }
 controls();init();
