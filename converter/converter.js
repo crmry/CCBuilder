@@ -1,4 +1,5 @@
-import { OfficeEngine, ensureCrossOriginIsolation } from './office-converter/index.js';
+// Load the optional WebAssembly engine during initialization so failures are shown in the UI.
+// A static import failure used to leave the page stuck at 'Preparing converter...'.
 
 const $ = id => document.getElementById(id);
 const zone=$('drop-zone'), input=$('file-input'), convert=$('convert-button'), clear=$('clear-button');
@@ -111,6 +112,9 @@ window.addEventListener('pagehide',release);
 async function init() {
     announce('Setting up private local conversion...');
     try {
+        announce('Checking LibreOffice converter files...');
+        const { OfficeEngine, ensureCrossOriginIsolation } = await import('./office-converter/index.js');
+        announce('Setting up private local conversion...');
         const isolated=await ensureCrossOriginIsolation('./sw.js');
         if(!isolated) { announce('Local conversion requires a modern desktop browser with service workers enabled.',true);return; }
         engine=new OfficeEngine({base:new URL('./office-converter/',import.meta.url)});
@@ -119,7 +123,10 @@ async function init() {
             if(e.detail.state==='error')announce('Engine error: '+(e.detail.text||'Unknown error'),true);
         });
         ready=true;announce('Ready. Drop DOCX files to convert them locally.');
-    }catch(e){announce('Could not initialize converter: '+(e?.message||String(e)),true)}
+    }catch(e){
+        console.error('CCBuilder PDF converter initialization failed',e);
+        announce('Converter unavailable: '+(e?.message||String(e))+'. Try a hard refresh (Ctrl+Shift+R). If the issue persists, check that the LibreOffice engine files deployed successfully.',true);
+    }
     controls();
 }
 controls();init();
