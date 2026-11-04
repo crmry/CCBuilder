@@ -62,3 +62,14 @@ For **Apply CCBuilder A4 standard**, the browser fallback now detects the render
 
 ### GitHub Pages vendor asset fix (November 4, 2026)
 The browser fallback's required files now live directly under `converter/vendor/` in the repository: `jszip.min.js` (JSZip, MIT/GPLv3), `docx-preview.min.js` (docxjs, MIT), and `html2canvas.min.js` (html2canvas 1.4.1, MIT). This fixes missing vendor files when GitHub Pages publishes from the branch instead of running the custom Actions assembly workflow. The build workflow can still replace these with pinned npm-distributed builds. Browser fallback v5 uses cache-busted asset URLs. The office-converter WebAssembly runtime still requires the GitHub Actions assembly workflow, so branch-only publishing should use the browser fallback engine. Check the deployed paths `/CCBuilder/converter/vendor/jszip.min.js`, `/CCBuilder/converter/vendor/docx-preview.min.js`, and `/CCBuilder/converter/vendor/html2canvas.min.js` if conversion reports missing scripts.
+
+## Hybrid temporary runtime caching (November 4, 2026)
+
+The converter's **scoped service worker** now works in two environments:
+
+- **GitHub Actions Pages build:** the workflow publishes the complete pinned LibreOffice WebAssembly runtime, and the upstream service worker handles compressed WASM downloads and versioned `lo-assets-*` Cache Storage. Only runtime binaries are persisted; uploaded documents are not stored there.
+- **Branch-only Pages build:** when `office-converter/service-worker.js` is missing, the worker falls back to caching only the locally committed browser dependencies under `ccbuilder-browser-runtime-20261104-v1`. Older fallback runtime cache versions are removed during activation. Missing LibreOffice entrypoints are detected without trying to start the engine.
+
+Uploaded DOCX files, intermediate conversion buffers, generated PDF blobs and download URLs remain in the page's memory; `Clear Files` and navigation away release application references and object URLs. Browsers reclaim memory; literal disk/OS temporary-file erasure and physical secure deletion cannot be guaranteed, and browser-managed runtime caches intentionally remain after closing the tab to speed later use. No DOCX/PDF is written to Cache Storage.
+
+**The 404 for `office-converter/engine-worker.js` cannot be fixed by caching alone.** To enable LibreOffice, configure repository Settings → Pages → Source = **GitHub Actions**, and run `.github/workflows/pages.yml` on `main`. If only branch publishing is enabled, the browser renderer remains functional without LibreOffice.
