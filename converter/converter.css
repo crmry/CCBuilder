@@ -77,3 +77,13 @@ body.cc-is-busy { overflow:hidden; }
 .cc-cancel-button { margin-top:18px; border-color:#fca5a5; color:#b91c1c; }
 .cc-cancel-button:disabled { opacity:.65; cursor:wait; }
 @media(max-width:780px) { .cc-file-row .cc-remove-file { margin-left:auto; } }
+
+/* Quiet, compact footer and readability on narrow screens. */
+.cc-footer { display:flex; flex-wrap:wrap; align-items:center; gap:0 7px;
+  padding:2px 0 16px; font-size:12px; line-height:1.5; color:#64748b; }
+.cc-footer-separator { color:#94a3b8; }
+.cc-footer a { color:#475569; text-decoration:underline; text-decoration-color:#cbd5e1;
+  text-underline-offset:2px; }
+.cc-footer a:hover,.cc-footer a:focus-visible { color:#1d4ed8; }
+.cc-engine-setting .cc-muted { max-width:640px; line-height:1.5; }
+.cc-status { font-size:13px; line-height:1.55; overflow-wrap:anywhere; }
