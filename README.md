@@ -13,7 +13,7 @@ The Builder's existing functionality remains intact: CKEditor, requirements and 
 ## PDF Converter
 Drag & drop or select up to 20 DOCX files (50 MB each), press **Convert to PDF**, and download the PDFs individually or all at once. The browser may request permission for multiple downloads.
 
-Documents are processed locally with LibreOffice WebAssembly in a Web Worker: no upload, account or server storage. Converted files are kept in browser memory only until cleared or the page is closed. The first visit downloads ~30 MB of runtime, then caches it. It requires a modern desktop-class browser and approximately 1 GB of memory. Password-protected documents aren't supported.
+Documents are processed locally with LibreOffice WebAssembly in a Web Worker, or (when LibreOffice cannot start) with a bundled DOCX preview + canvas/PDF fallback: no document upload, account or server storage. Converted files are kept in browser memory only until cleared or the page is closed. The first visit downloads ~30 MB of runtime, then caches it. It requires a modern desktop-class browser and approximately 1 GB of memory. Password-protected documents aren't supported.
 
 **Formatting:** Word documents retain their own page dimensions and margin settings to the extent that LibreOffice can render them; the Builder's separate 1.5-inch top margin does not override uploaded DOCX files.
 
@@ -44,3 +44,11 @@ This conversion is **best-effort**: complex tables and page breaks can reflow wh
 ### Collapsible sidebar
 
 The shared sidebar starts as a narrow icon rail on desktop. Hover over it to reveal **Builder** and **PDF Converter**, or click the hamburger icon to pin it open. Click again to unpin and return to the compact layout. Pinned state is remembered for the current browser tab. When pinned, the workspace content shifts to make room; a temporary hover preview overlays the content without changing form state. On mobile, the hamburger opens a dismissible navigation drawer (tap outside or press Escape to close). Neither action navigates away or reloads the Builder.
+
+## PDF conversion engine failover
+
+Select **Automatic** (default), **LibreOffice only**, or **Browser renderer only** in the PDF Converter. Automatic attempts LibreOffice first and switches to the browser fallback if its worker fails or times out. LibreOffice runs from pinned upstream assets deployed alongside the site; the converter probes worker/manifest availability and provides improved worker-error diagnostics. An existing service worker is also updated on load to reduce stale assets.
+
+The fallback uses locally bundled [docx-preview](https://github.com/VolodymyrBaydalka/docxjs), JSZip, html2canvas, and jsPDF. It renders the DOCX into off-screen HTML, captures each rendered page, and produces an **image-based PDF**. This is not equivalent to Word or LibreOffice pagination: automatic page breaks, long tables, fonts, text search, selectable text, accessibility, and section layout may be less accurate. For official records, review PDFs before use. A4 normalization (1.5-inch top, 0.5-inch right, 1-inch bottom, 1-inch left) modifies only a temporary copy; "Preserve original" keeps the Word document's page settings where possible.
+
+The fallback is offered even when cross-origin isolation cannot be enabled or LibreOffice import fails. The PDF renderer needs adequate browser memory, especially for multi-page reports. No browser-only engine can guarantee identical output to Microsoft Word for arbitrary DOCX files.
