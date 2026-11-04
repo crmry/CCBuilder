@@ -5,6 +5,7 @@ const $ = id => document.getElementById(id);
 const zone=$('drop-zone'), input=$('file-input'), convert=$('convert-button'), clear=$('clear-button');
 const downloadAll=$('download-all-button'), note=$('download-note');
 const status=$('engine-status'), section=$('files-section'), list=$('file-list');
+const overlay=$('convert-overlay'), overlayText=$('convert-overlay-text');
 const LIMIT_COUNT=20, LIMIT_BYTES=50*1024*1024;
 const engineMode=$('engine-mode'), engineHint=$('engine-hint');
 const OFFICE_TIMEOUT_MS=150000;
@@ -15,6 +16,12 @@ let files=[], results=[], urls=[], engine=null, ready=true, working=false;
 function announce(message, error=false) {
     status.textContent=message;
     status.classList.toggle('is-error',error);
+    if(working && overlayText) overlayText.textContent=message;
+}
+function busyOverlay(active, message='Preparing document locally...') {
+    if(overlay) overlay.hidden=!active;
+    document.body.classList.toggle('cc-is-busy',active);
+    if(overlayText) overlayText.textContent=message;
 }
 function controls() {
     if(engineMode)engineMode.disabled=working;
@@ -103,6 +110,9 @@ async function convertDocument(source,standard){
 async function process() {
     if(!ready || working || !files.length) return;
     working=true; controls(); release(); list.replaceChildren(); section.hidden=false;
+    busyOverlay(true,'Preparing conversion...');
+    // Allow the loading animation to paint before starting CPU-intensive rendering.
+    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
     const queued=files.slice(), used=new Set(); let ok=0;
     try {
         for(let i=0;i<queued.length;i++) {
@@ -125,6 +135,7 @@ async function process() {
         announce(ok+' of '+queued.length+' documents converted.'+(ok<queued.length?' See errors below.':''),ok<queued.length);
     } finally {
         working=false; files=[]; controls();
+        busyOverlay(false);
     }
 }
 zone.addEventListener('click',()=>{if(ready&&!working) input.click()});
