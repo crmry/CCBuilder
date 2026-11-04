@@ -32,11 +32,10 @@ jobs:
         shell: bash
         run: |
           npm install --prefix _pdf-package --no-save --ignore-scripts \
-            jszip@3.10.1 docx-preview@0.4.1 html2canvas@1.4.1 jspdf@2.5.2
+            jszip@3.10.1 docx-preview@0.4.1 html2canvas@1.4.1
           test -f _pdf-package/node_modules/jszip/dist/jszip.min.js
           test -f _pdf-package/node_modules/docx-preview/dist/docx-preview.min.js
           test -f _pdf-package/node_modules/html2canvas/dist/html2canvas.min.js
-          test -f _pdf-package/node_modules/jspdf/dist/jspdf.umd.min.js
       - name: Assemble static site
         shell: bash
         run: |
@@ -49,7 +48,6 @@ jobs:
           cp _pdf-package/node_modules/jszip/dist/jszip.min.js _site/converter/vendor/jszip.min.js
           cp _pdf-package/node_modules/docx-preview/dist/docx-preview.min.js _site/converter/vendor/docx-preview.min.js
           cp _pdf-package/node_modules/html2canvas/dist/html2canvas.min.js _site/converter/vendor/html2canvas.min.js
-          cp _pdf-package/node_modules/jspdf/dist/jspdf.umd.min.js _site/converter/vendor/jspdf.umd.min.js
           # Improve LibreOffice worker startup diagnostics while retaining upstream pinned runtime.
           python3 - <<'PY'
           from pathlib import Path
@@ -70,7 +68,6 @@ jobs:
           test -f _site/converter/vendor/jszip.min.js
           test -f _site/converter/vendor/docx-preview.min.js
           test -f _site/converter/vendor/html2canvas.min.js
-          test -f _site/converter/vendor/jspdf.umd.min.js
           node --check converter/browser-fallback.js
           node --check converter/workspace.js
           node --check converter/normalize-docx.js
