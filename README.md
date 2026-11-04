@@ -73,3 +73,11 @@ The converter's **scoped service worker** now works in two environments:
 Uploaded DOCX files, intermediate conversion buffers, generated PDF blobs and download URLs remain in the page's memory; `Clear Files` and navigation away release application references and object URLs. Browsers reclaim memory; literal disk/OS temporary-file erasure and physical secure deletion cannot be guaranteed, and browser-managed runtime caches intentionally remain after closing the tab to speed later use. No DOCX/PDF is written to Cache Storage.
 
 **The 404 for `office-converter/engine-worker.js` cannot be fixed by caching alone.** To enable LibreOffice, configure repository Settings → Pages → Source = **GitHub Actions**, and run `.github/workflows/pages.yml` on `main`. If only branch publishing is enabled, the browser renderer remains functional without LibreOffice.
+
+## DOCX-to-PDF formatting safeguards (converter build 2026-11-04.7)
+
+In **Apply CCBuilder A4 standard** mode, the browser fallback now omits pages with no detectable visible pixels, places the rendered content without stretching inside an A4 page with top 1.5 in, right 0.5 in, bottom 1 in and left 1 in, and reports the number of skipped blank pages after conversion. **Preserve original Word layout** does not remove blank pages or enforce the CCBuilder margins. Blank detection uses a white-page raster scan: it does not attempt to reflow large tables across pages or remove pages containing footers or other visible marks.
+
+These safeguards apply to **DOCX files converted by CCBuilder**. The converter currently does **not** accept existing PDFs for repair, and the separate Citizen Charter Builder print preview uses its own vector-print CSS `@page` settings. PDFs previously exported by Microsoft Word must be re-exported from their DOCX originals to benefit from the browser conversion safeguards; a separate PDF repair feature would be needed to modify already-existing PDFs in the website.
+
+Browser-generated fallback PDFs are image-based, may shrink overly dense content, and still require page-by-page visual validation for official Citizen's Charter forms.
