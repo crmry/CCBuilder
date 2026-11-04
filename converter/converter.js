@@ -122,7 +122,7 @@ async function convertDocument(source,standard){
         console.warn('LibreOffice conversion failed',error);
         if(selected==='libreoffice')throw error;
         announce('LibreOffice failed ('+officeFailure+'). Using browser fallback...');
-        setEngineHint('LibreOffice unavailable: '+officeFailure+'. Auto mode uses the browser renderer instead.');
+        setEngineHint('The recommended method automatically switched to basic conversion.');
         const fallback=await loadFallback();
         return fallback.convertWithBrowser(source,{standard,onProgress:message=>announce(message),shouldCancel:()=>cancelRequested});
     }
@@ -216,7 +216,7 @@ async function init() {
     ready=true;
     controls();
     announce('Preparing converter...');
-    setEngineHint('Automatic uses LibreOffice when available and switches to the browser fallback if needed.');
+    setEngineHint('Recommended selects the best available method.');
     // The scoped worker handles versioned runtime library caches, not document data.
     // Register it even when the optional LibreOffice engine has not been deployed.
     if ('serviceWorker' in navigator) {
@@ -254,12 +254,12 @@ async function init() {
             }
         });
         announce('Ready to convert.');
-        setEngineHint('LibreOffice files detected. Automatic mode will fall back if conversion fails.');
+        setEngineHint('Recommended selects the best available method.');
     } catch(error) {
         officeFailure=error?.message||String(error);
         console.warn('Optional LibreOffice runtime unavailable:',error);
         announce('Ready to convert using the browser renderer.');
-        setEngineHint('LibreOffice unavailable. Automatic mode will use the browser renderer.');
+        setEngineHint('Recommended will use basic conversion on this device.');
     } finally {controls();}
 }
 controls();init();
