@@ -68,3 +68,12 @@ button,input { font:inherit; }
 @keyframes cc-convert-spin { to { transform:rotate(360deg); } }
 body.cc-is-busy { overflow:hidden; }
 @media (prefers-reduced-motion:reduce) { .cc-spinner { animation-duration:2s; } }
+
+/* File queue tools and safe cancellation controls. */
+.cc-remove-file { flex:0 0 auto; padding:7px 11px; border-radius:6px;
+  border:1px solid #fecaca; background:#fff; color:#b91c1c;
+  font:600 12px/1.4 Arial,sans-serif; cursor:pointer; }
+.cc-remove-file:hover,.cc-remove-file:focus-visible { background:#fef2f2; outline-offset:2px; }
+.cc-cancel-button { margin-top:18px; border-color:#fca5a5; color:#b91c1c; }
+.cc-cancel-button:disabled { opacity:.65; cursor:wait; }
+@media(max-width:780px) { .cc-file-row .cc-remove-file { margin-left:auto; } }
