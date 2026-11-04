@@ -1423,11 +1423,11 @@
 		                }
 		            },
 		            {
-		                element: '.ck-editor, #editor',
+		                element: '#description-tour-target',
 		                popover: {
 		                    title: 'Description',
 		                    description: '<strong>ARTA Standard:</strong> Provide a concise statement informing citizens of the exact purpose of the service, statutory legal basis/mandate, and applicable qualification criteria.<br><br>• Keep language simple, clear, and citizen-friendly.<br>• Rich formatting (bullet points, bold highlights) can be used to organize multi-part scopes.',
-		                    side: 'top',
+		                    side: 'bottom',
 		                    align: 'start'
 		                }
 		            },
