@@ -64,10 +64,13 @@ jobs:
           test -f _site/converter/office-converter/lo/manifest.json
           test -f _site/converter/office-converter/lo/soffice.wasm.xz.000
           test -f _site/converter/office-converter/service-worker.js
+          test -f _site/converter/sw.js
           test -f _site/converter/vendor/fflate.min.js
           test -f _site/converter/vendor/jszip.min.js
           test -f _site/converter/vendor/docx-preview.min.js
           test -f _site/converter/vendor/html2canvas.min.js
+          node --check converter/sw.js
+          node --check converter/browser-fallback-v5.js
           node --check converter/browser-fallback.js
           node --check converter/workspace.js
           node --check converter/normalize-docx.js
