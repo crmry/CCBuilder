@@ -32,7 +32,7 @@
     min-height: 44px; padding: 10px 13px; border-radius: 8px;
     font-size: 14px; font-weight: 600; color: #475569; text-decoration: none;
 }
-.cc-sidebar-link i { flex: 0 0 18px; width: 18px; text-align: center; font-size: 18px; }
+.cc-sidebar-link i, .cc-sidebar-link svg { flex: 0 0 18px; width: 18px; height: 18px; text-align: center; font-size: 18px; }
 .cc-sidebar-link:hover, .cc-sidebar-link:focus-visible { color: #1d4ed8; background: #eff6ff; text-decoration: none; }
 .cc-sidebar-link.is-active { color: #1d4ed8; background: #e8f0ff; }
 .cc-sidebar-pinned .cc-sidebar,
