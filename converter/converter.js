@@ -63,7 +63,7 @@ function uniqueName(name, used) {
     used.add(candidate.toLowerCase()); return candidate;
 }
 async function loadFallback(){
-    if(!browserFallback)browserFallback=import('./browser-fallback-v7.js?build=95e04c9');
+    if(!browserFallback)browserFallback=import('./browser-fallback-v8.js?build=44be2f1');
     return browserFallback;
 }
 function setEngineHint(message){if(engineHint)engineHint.textContent=message;}
@@ -116,7 +116,7 @@ async function process() {
                 const url=URL.createObjectURL(result.blob);
                 const name=uniqueName(f.name,used);
                 urls.push(url); results.push({url,name}); ok++;
-                row(f.name,'Converted with '+(result.engine==='browser'?'browser fallback (image-based PDF)':'LibreOffice')+' · '+size(result.blob.size)+(result.skippedBlankPages?' · '+result.skippedBlankPages+' blank page(s) removed':''),false,{url,name});
+                row(f.name,'Converted with '+(result.engine==='browser'?'browser fallback (image-based PDF)':'LibreOffice')+' · '+size(result.blob.size)+(result.skippedBlankPages?' · '+result.skippedBlankPages+' blank page(s) removed':'')+(result.forcedSplits?' · Review '+result.forcedSplits+' oversized row split(s)':''),false,{url,name});
             } catch(e) {
                 row(f.name,'Failed: '+(e?.message||String(e)),true);
             }
