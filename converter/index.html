@@ -6,7 +6,7 @@
  <title>PDF Converter | Citizen Charter Builder</title>
  <link rel="stylesheet" href="../assets/font-awesome/css/font-awesome.css">
  <link rel="stylesheet" href="../assets/navigation.css?v=3">
- <link rel="stylesheet" href="./converter.css?v=5">
+ <link rel="stylesheet" href="./converter.css?v=6">
 </head>
 <body class="cc-has-sidebar">
  
@@ -32,7 +32,7 @@
     </nav>
 
  <main id="converter-view" class="cc-converter-main">
-  <header><h1>PDF CONVERTER</h1><small class="cc-muted">Converter build 2026-11-04.11</small><p class="cc-muted">Convert Microsoft Word documents to PDF securely in your browser.</p></header>
+  <header><h1>PDF CONVERTER</h1><small class="cc-muted">Converter build 2026-11-04.12</small><p class="cc-muted">Convert Microsoft Word documents to PDF securely in your browser.</p></header>
   <section class="cc-card" aria-labelledby="upload-title">
    <h2 id="upload-title">Word to PDF</h2>
    <p class="cc-muted">Drag in DOCX files, or browse your computer. Documents never leave your device.</p>
@@ -60,7 +60,8 @@
    </div>
    <div class="cc-controls">
     <button type="button" id="convert-button" class="cc-btn cc-primary" disabled><i class="fa fa-file-pdf-o" aria-hidden="true"></i> Convert to PDF</button>
-    <button type="button" id="clear-button" class="cc-btn cc-secondary" disabled>Clear Files</button>
+    <button type="button" id="add-more-button" class="cc-btn cc-secondary" disabled>Add More Files</button>
+    <button type="button" id="clear-button" class="cc-btn cc-secondary" disabled>Clear All</button>
    </div>
    <p class="cc-private"><i class="fa fa-shield"></i> Local processing · No uploads or document storage</p>
    <p id="engine-status" class="cc-status" role="status" aria-live="polite">Preparing converter...</p>
@@ -79,13 +80,14 @@
      <div class="cc-spinner" aria-hidden="true"></div>
      <strong id="convert-overlay-title">Converting document...</strong>
      <p id="convert-overlay-text">Preparing document locally...</p>
-     <small>Please keep this tab open while conversion finishes.</small>
+     <small id="convert-overlay-note">Please keep this tab open while conversion finishes.</small>
+     <button type="button" id="cancel-conversion-button" class="cc-btn cc-secondary cc-cancel-button">Cancel Conversion</button>
    </div>
  </div>
  <script src="./vendor/fflate.min.js"></script>
  <script src="./normalize-docx.js?v=4" defer></script>
  <script src="../assets/sidebar.js?v=3" defer></script>
  <script src="./workspace.js?v=3" defer></script>
- <script type="module" src="./converter.js?v=17"></script>
+ <script type="module" src="./converter.js?v=18"></script>
 </body>
 </html>
