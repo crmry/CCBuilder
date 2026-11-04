@@ -32,7 +32,7 @@
     </nav>
 
  <main id="converter-view" class="cc-converter-main">
-  <header><h1>PDF CONVERTER</h1><small class="cc-muted">Converter build 2026-11-04.14</small><p class="cc-muted">Convert Microsoft Word documents to PDF securely in your browser.</p></header>
+  <header><h1>PDF CONVERTER</h1><small class="cc-muted">Converter build 2026-11-04.15</small><p class="cc-muted">Convert Microsoft Word documents to PDF securely in your browser.</p></header>
   <section class="cc-card" aria-labelledby="upload-title">
    <h2 id="upload-title">Word to PDF</h2>
    <p class="cc-muted">Drag in DOCX files, or browse your computer. Documents never leave your device.</p>
@@ -50,13 +50,13 @@
     <p class="cc-layout-warning">Changing paper size or margins may reflow wide tables, headers, and page breaks. Inspect the converted PDF before use.</p>
    </fieldset>
    <div class="cc-engine-setting">
-    <label for="engine-mode"><strong>Conversion engine</strong></label>
+    <label for="engine-mode"><strong>Conversion method</strong></label>
     <select id="engine-mode" aria-describedby="engine-hint">
-     <option value="auto" selected>Automatic — LibreOffice, then browser fallback</option>
-     <option value="libreoffice">LibreOffice only (higher fidelity)</option>
-     <option value="browser">Browser renderer only (image-based PDF)</option>
+     <option value="auto" selected>Recommended (Automatic)</option>
+     <option value="libreoffice">High accuracy</option>
+     <option value="browser">Basic conversion</option>
     </select>
-    <p id="engine-hint" class="cc-muted">Automatic will use the browser fallback when LibreOffice is unavailable.</p>
+    <p id="engine-hint" class="cc-muted">Recommended selects the best available method.</p>
    </div>
    <div class="cc-controls">
     <button type="button" id="convert-button" class="cc-btn cc-primary" disabled><i class="fa fa-file-pdf-o" aria-hidden="true"></i> Convert to PDF</button>
@@ -88,6 +88,6 @@
  <script src="./normalize-docx.js?v=4" defer></script>
  <script src="../assets/sidebar.js?v=3" defer></script>
  <script src="./workspace.js?v=3" defer></script>
- <script type="module" src="./converter.js?v=20"></script>
+ <script type="module" src="./converter.js?v=21"></script>
 </body>
 </html>
