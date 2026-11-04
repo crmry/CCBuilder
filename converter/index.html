@@ -6,7 +6,7 @@
  <title>PDF Converter | Citizen Charter Builder</title>
  <link rel="stylesheet" href="../assets/font-awesome/css/font-awesome.css">
  <link rel="stylesheet" href="../assets/navigation.css?v=3">
- <link rel="stylesheet" href="./converter.css?v=6">
+ <link rel="stylesheet" href="./converter.css?v=7">
 </head>
 <body class="cc-has-sidebar">
  
@@ -32,7 +32,7 @@
     </nav>
 
  <main id="converter-view" class="cc-converter-main">
-  <header><h1>PDF CONVERTER</h1><small class="cc-muted">Converter build 2026-11-04.12</small><p class="cc-muted">Convert Microsoft Word documents to PDF securely in your browser.</p></header>
+  <header><h1>PDF CONVERTER</h1><small class="cc-muted">Converter build 2026-11-04.13</small><p class="cc-muted">Convert Microsoft Word documents to PDF securely in your browser.</p></header>
   <section class="cc-card" aria-labelledby="upload-title">
    <h2 id="upload-title">Word to PDF</h2>
    <p class="cc-muted">Drag in DOCX files, or browse your computer. Documents never leave your device.</p>
@@ -56,7 +56,7 @@
      <option value="libreoffice">LibreOffice only (higher fidelity)</option>
      <option value="browser">Browser renderer only (image-based PDF)</option>
     </select>
-    <p id="engine-hint" class="cc-muted">Browser fallback may alter page breaks and creates image-based PDF pages. Review the result before official use.</p>
+    <p id="engine-hint" class="cc-muted">Automatic will use the browser fallback when LibreOffice is unavailable.</p>
    </div>
    <div class="cc-controls">
     <button type="button" id="convert-button" class="cc-btn cc-primary" disabled><i class="fa fa-file-pdf-o" aria-hidden="true"></i> Convert to PDF</button>
@@ -73,7 +73,7 @@
    <button id="download-all-button" class="cc-btn cc-secondary" type="button" hidden>Download All PDFs</button>
    <p id="download-note" class="cc-muted" hidden>Your browser may ask to allow multiple downloads. Individual download links remain available.</p>
   </section>
-  <footer class="cc-footer">Citizen Charter Builder · Powered by LibreOffice WebAssembly / docx-preview fallback · <a href="https://github.com/Skitionek/serverless-office-converter" rel="noopener noreferrer" target="_blank">Engine source</a></footer>
+  <footer class="cc-footer"><span>Citizen Charter Builder</span><span class="cc-footer-separator" aria-hidden="true">·</span><span>Private, on-device conversion</span><span class="cc-footer-separator" aria-hidden="true">·</span><a href="https://github.com/Skitionek/serverless-office-converter" rel="noopener noreferrer" target="_blank">LibreOffice engine</a></footer>
  </main>
  <div id="convert-overlay" class="cc-convert-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="convert-overlay-title" aria-describedby="convert-overlay-text">
    <div class="cc-convert-dialog" role="status" aria-live="polite">
@@ -88,6 +88,6 @@
  <script src="./normalize-docx.js?v=4" defer></script>
  <script src="../assets/sidebar.js?v=3" defer></script>
  <script src="./workspace.js?v=3" defer></script>
- <script type="module" src="./converter.js?v=19"></script>
+ <script type="module" src="./converter.js?v=20"></script>
 </body>
 </html>
