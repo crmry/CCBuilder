@@ -11,44 +11,68 @@
   const feeAmount = /(?:\bPHP\b|₱)\s*[\d,]+(?:\.\d{1,2})?/i;
   const numericRange = /\d[\d,.]*\s*(?:-|–|—|\bto\b)\s*\d[\d,.]*/i;
   const timeUnits = /\b\d+(?:\.\d+)?\s*(?:working\s+|business\s+)?(?:day|days|hour|hours|hr|hrs|minute|minutes|min|mins)\b/i;
-  // Screening aid, not an authoritative government plantilla directory.
-  const positionWords = /\b(officer|nurse|nursing|administrative|aide|assistant|supervisor|chief|head|director|technologist|technician|pharmacist|physician|specialist|registrar|accountant|clerk|engineer|attendant|secretary|therapist|midwife|surgeon|dentist|nutritionist|dietitian|psychologist|social worker|social welfare|information technology|operator|cashier|encoder|statistician|librarian|architect|auditor|analyst|inspector|manager|coordinator|pathologist|radiologist|consultant|medical|health|records|housekeeper|driver|utility worker|janitor)\b/i;
-
-  // Keep CKEditor paragraph and line-break boundaries: one cell can list
-  // several plantilla positions followed by a single responsible office.
+  // Titles are checked against the user's 130-entry approved-position list.
+  // The office/section/unit is separate from the plantilla title.
   function editorLines(value) {
-    return String(typeof value === 'string' ? value : '')
-      .replace(/<br\s*\/?>/gi, '\n')
-      .replace(/<\/(?:p|div|li|h[1-6])\s*>/gi, '\n')
-      .replace(/<li\b[^>]*>/gi, '\n')
-      .replace(/<[^>]*>/g, ' ')
-      .replace(/&nbsp;|&#160;/gi, ' ').replace(/&amp;/gi, '&')
-      .split(/\r?\n|;\s*/).map(line => line.replace(/\s+/g,' ').trim()).filter(Boolean);
+    return String(typeof value==='string'?value:'')
+      .replace(/<br\s*\/?>/gi,'\n')
+      .replace(/<\/(?:p|div|li|h[1-6])\s*>/gi,'\n')
+      .replace(/<li\b[^>]*>/gi,'\n')
+      .replace(/<[^>]*>/g,' ')
+      .replace(/&nbsp;|&#160;/gi,' ').replace(/&amp;/gi,'&')
+      .split(/\r?\n|;\s*/)
+      .map(line=>line.replace(/\s+/g,' ').trim())
+      .filter(Boolean);
   }
 
-  const officeWords = /\b(office|division|department|section|unit|center|centre|bureau|branch|service|facility|ward|desk|secretariat)\b/i;
+  const officeWords=/\b(office|division|department|section|unit|center|centre|bureau|branch|service|facility|ward|desk|secretariat)\b/i;
   function validateResponsibleCell(value) {
-    const lines = editorLines(value);
-    if (!lines.length) return 'missing';
-    const clauses = lines.flatMap(line =>
-      line.split(/,\s*|\s+[–—-]\s+/).map(part=>part.trim()).filter(Boolean));
-    // Use the final office clause so positions such as "Service Assistant"
-    // don't get mistaken for the name of an agency unit.
-    let officeIndex = -1;
-    for(let i=clauses.length-1;i>=0;i--){
-      if(officeWords.test(clauses[i])) {officeIndex=i;break;}
+    const reference=window.CCPlantillaPositions;
+    if(!reference || !Array.isArray(reference.titles) || !reference.titles.length)
+      return {kind:'list-unavailable'};
+
+    const lines=editorLines(value);
+    if(!lines.length)return {kind:'missing'};
+    // Commas and spaced dashes separate titles and office; compact title
+    // hyphens (Nutritionist-Dietitian) are left intact.
+    let clauses=lines.flatMap(line=>line.split(/,\s*|\s+[–—-]\s+/).map(x=>x.trim()).filter(Boolean));
+    let office='';
+    let positions=clauses;
+
+    const last=clauses[clauses.length-1];
+    if(last && !reference.match(last) && officeWords.test(last)){
+      office=last;
+      positions=clauses.slice(0,-1);
     }
-    if(officeIndex < 0) return 'office';
-    const positions=clauses.slice(0,officeIndex);
-    // Older JSON may flatten an entire entry into one line.
-    if (!positions.length && clauses.length === 1) {
-      const roleMatch=clauses[0].match(positionWords);
-      const officeMatch=clauses[0].match(officeWords);
-      // Accept flattened "Nurse Attendant II IMISS Office", but not a
-      // stand-alone title such as "Service Assistant I".
-      return roleMatch && officeMatch && roleMatch.index < officeMatch.index ? null : 'office';
+    // Support legacy one-line: "Administrative Officer V Cashier Section".
+    // Do not confuse an exact position such as "Ward Assistant" with an office.
+    if(!office && clauses.length===1 && last && !reference.match(last)){
+      const words=last.split(/\s+/);
+      let proposed=null;
+      for(let i=1;i<words.length-1;i++){
+        const role=words.slice(0,i).join(' ');
+        const unit=words.slice(i).join(' ');
+        if(!officeWords.test(unit) || reference.match(unit))continue;
+        const known=reference.match(role);
+        const candidate=known||reference.closest(role);
+        if(!candidate)continue;
+        const score=(known?100:0)+role.length;
+        if(!proposed || score>proposed.score)
+          proposed={role,unit,score};
+      }
+      if(proposed){
+        office=proposed.unit;
+        positions=[proposed.role];
+      }
     }
-    if(!positions.length || positions.some(position=>!positionWords.test(position)))return 'position';
+    if(!office)return {kind:'office'};
+    if(!positions.length)return {kind:'position'};
+
+    const invalid=positions.filter(title=>!reference.match(title));
+    if(invalid.length){
+      const invalidTitle=invalid[0];
+      return {kind:'position',title:invalidTitle,suggestion:reference.closest(invalidTitle)};
+    }
     return null;
   }
 
@@ -170,16 +194,23 @@
           add('Process Overview', 'Step ' + n + ': Processing Time', 'Use a fixed number of days, hours or minutes, not a range or “varies”.', cell(4));
 
         const responsibleIssue=validateResponsibleCell(entry.personResponsible);
-        if(responsibleIssue==='missing'){
-          add('Process Overview','Step '+n+': Person Responsible',
-            'Enter the official plantilla position title(s) and responsible office.',cell(5));
-        }else if(responsibleIssue==='office'){
-          add('Process Overview','Step '+n+': Person Responsible',
-            'Add the responsible office, section, or unit alongside the plantilla position title(s).',cell(5));
-        }else if(responsibleIssue==='position'){
-          add('Process Overview','Step '+n+': Person Responsible',
-            'Use official plantilla position titles, not employee names. Multiple titles can appear on separate lines above their office.',cell(5));
+        if(responsibleIssue){
+          let message='';
+          if(responsibleIssue.kind==='list-unavailable'){
+            message='The plantilla reference is unavailable. Refresh this page to reload the position list before exporting.';
+          }else if(responsibleIssue.kind==='missing'){
+            message='Enter a title from the plantilla list and the responsible office.';
+          }else if(responsibleIssue.kind==='office'){
+            message='Add the responsible office, section, or unit. List the plantilla title(s) above it.';
+          }else if(responsibleIssue.title){
+            message='“'+responsibleIssue.title+'” was not found in the plantilla list.'+
+              (responsibleIssue.suggestion?' Suggested title: “'+responsibleIssue.suggestion+'”.':' Check the exact approved title and position level.');
+          }else{
+            message='Enter an approved plantilla position title above the responsible office.';
+          }
+          add('Process Overview','Step '+n+': Person Responsible',message,cell(5));
         }
+
       });
     }
 
