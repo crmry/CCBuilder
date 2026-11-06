@@ -217,8 +217,8 @@
                                     <button type="button" class="btn btn-success shadow-sm" onclick="saveFormData()" data-bs-toggle="tooltip" data-bs-placement="top" title="Save a complete, validated Citizen Charter as a .json file">
                                         <i class="fa fa-save"></i> Save
                                     </button>
-                                    <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="importFormData(event)">
-                                    <button type="button" class="btn btn-info shadow-sm" onclick="document.getElementById('importFileInput').click()" data-bs-toggle="tooltip" data-bs-placement="top" title="Open a complete Citizen Charter (.json) file">
+                                    <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="window.ccMainImportFile(event)">
+                                    <button type="button" class="btn btn-info shadow-sm" onclick="document.getElementById('importFileInput').click()" data-bs-toggle="tooltip" data-bs-placement="top" title="Open an existing Citizen Charter JSON, including drafts needing correction">
                                         <i class="fa fa-folder-open"></i> Open
                                     </button>
                                     <button type="button" class="btn btn-outline-danger" onclick="clearForm()" data-bs-toggle="tooltip" data-bs-placement="top" title="Clear all form fields">
@@ -345,8 +345,8 @@
 
     <script src="assets/sidebar.js?v=3" defer></script>
     <!-- Main Script -->
-    <script src="assets/main.js?v=12.2"></script>
+    <script src="assets/main.js?v=12.3"></script>
     <script src="assets/validation.js?v=1.2"></script>
-    <script src="assets/import-inspector.js?v=1.0"></script>
+    <script src="assets/import-inspector.js?v=1.1"></script>
 </body>
 </html>
