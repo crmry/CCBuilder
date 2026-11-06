@@ -581,6 +581,7 @@
 		}
 
 		function clearForm() {
+		    if (typeof window.resetCharterReadiness === 'function') window.resetCharterReadiness();
 		    try {
 		        sessionStorage.removeItem(DRAFT_CACHE_KEY);
 		        localStorage.removeItem(DRAFT_CACHE_KEY);
