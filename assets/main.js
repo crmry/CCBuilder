@@ -762,7 +762,7 @@
 
 		function saveFormData() {
 		    const data = collectCurrentFormData();
-		    if (!data) return;
+		    if (!data || !window.validateCitizenCharterForAction(data, 'save')) return;
 
 		    // Determine a clean, valid file name for saving
 		    let fileName = '';
@@ -812,12 +812,15 @@
 		    const file = event.target.files[0];
 		    if (!file) return;
 
-		    currentOpenedFileName = file.name;
-
 		    const reader = new FileReader();
 		    reader.onload = function(e) {
 		        try {
 		            const data = JSON.parse(e.target.result);
+		            if (!window.validateCitizenCharterForAction(data, 'open')) {
+		                event.target.value = '';
+		                return;
+		            }
+		            currentOpenedFileName = file.name;
 		            applyFormData(data);
 		            scheduleAutoSave();
 		            event.target.value = '';
@@ -1004,7 +1007,8 @@
 		}
 
 		function openPreview() {
-		    console.log("Preview button clicked");
+		    const currentData = collectCurrentFormData();
+		    if (!currentData || !window.validateCitizenCharterForAction(currentData, 'preview')) return;
 		    const data = getCitizenCharterData();
 		    displayPreview(data);
 		}
@@ -1497,8 +1501,8 @@
 		            {
 		                element: '.actions-panel',
 		                popover: {
-		                    title: 'Preview, Save and Other Actions',
-		                    description: '• <strong>Preview / Save as PDF:</strong> Opens the official printable report preview. Select <em>"Save as PDF"</em> in your printer dialog for crisp vector output or print directly to paper.<br>• <strong>Save:</strong> Exports a standard <code>.json</code> data backup for recordkeeping and mandatory annual updates (required by March 31 annually).<br>• <strong>Open:</strong> Loads an existing <code>.json</code> file to modify or review.<br>• <strong>Clear Form:</strong> Resets fields to draft a new charter.',
+		                    title: 'Readiness Check, Preview and Save',
+		                    description: '• <strong>Check Readiness:</strong> Lists incomplete or nonstandard entries and directs you to the affected section.<br>• <strong>Preview / Save as PDF:</strong> Opens the official printable report preview. Select <em>"Save as PDF"</em> in your printer dialog for crisp vector output or print directly to paper.<br>• <strong>Save:</strong> Exports a standard <code>.json</code> data backup for recordkeeping and mandatory annual updates (required by March 31 annually).<br>• <strong>Open:</strong> Loads an existing <code>.json</code> file to modify or review.<br>• <strong>Clear Form:</strong> Resets fields to draft a new charter.',
 		                    side: 'top',
 		                    align: 'center'
 		                }

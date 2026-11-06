@@ -208,14 +208,17 @@
                                 </table>
 
                                 <div class="actions-panel">
+                                    <button type="button" class="btn btn-outline-primary shadow-sm" onclick="checkCharterReadiness()" data-bs-toggle="tooltip" data-bs-placement="top" title="Check mandatory fields and prescribed Citizen's Charter format">
+                                        <i class="fa fa-clipboard-check"></i> Check Readiness
+                                    </button>
                                     <button type="button" class="btn btn-primary shadow-sm" onclick="openPreview()" data-bs-toggle="tooltip" data-bs-placement="top" title="Preview printable report and save as PDF or print Citizen's Charter">
                                         <i class="fa fa-print"></i> Preview / Save as PDF
                                     </button>
-                                    <button type="button" class="btn btn-success shadow-sm" onclick="saveFormData()" data-bs-toggle="tooltip" data-bs-placement="top" title="Save Citizen Charter to a .json file">
+                                    <button type="button" class="btn btn-success shadow-sm" onclick="saveFormData()" data-bs-toggle="tooltip" data-bs-placement="top" title="Save a complete, validated Citizen Charter as a .json file">
                                         <i class="fa fa-save"></i> Save
                                     </button>
                                     <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="importFormData(event)">
-                                    <button type="button" class="btn btn-info shadow-sm" onclick="document.getElementById('importFileInput').click()" data-bs-toggle="tooltip" data-bs-placement="top" title="Open a saved Citizen Charter (.json) file">
+                                    <button type="button" class="btn btn-info shadow-sm" onclick="document.getElementById('importFileInput').click()" data-bs-toggle="tooltip" data-bs-placement="top" title="Open a complete Citizen Charter (.json) file">
                                         <i class="fa fa-folder-open"></i> Open
                                     </button>
                                     <button type="button" class="btn btn-outline-danger" onclick="clearForm()" data-bs-toggle="tooltip" data-bs-placement="top" title="Clear all form fields">
@@ -342,6 +345,7 @@
 
     <script src="assets/sidebar.js?v=3" defer></script>
     <!-- Main Script -->
-    <script src="assets/main.js?v=11.8"></script>
+    <script src="assets/main.js?v=12.0"></script>
+    <script src="assets/validation.js?v=1.0"></script>
 </body>
 </html>

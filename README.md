@@ -10,6 +10,16 @@ A browser-based Citizen's Charter authoring and publishing tool with only two si
 ## Builder
 The Builder's existing functionality remains intact: CKEditor, requirements and process steps, save/open JSON, and browser Print / Save as PDF. Its official PDF layout is **A4 portrait** with **top 1.5 in, right 0.5 in, bottom 1 in, left 1 in**. No export/margin code is changed.
 
+## Citizen Charter Readiness Check
+
+The Builder has a **Check Readiness** action. **Save** (JSON) and **Preview / Save as PDF** run the same check before producing any final output. **Open** rejects malformed, unrelated, or incomplete JSON files without replacing the current form. A correction dialog lists each issue by section, with a **Go to field** action for the current form.
+
+Checked items include service details, classification, transaction type, eligibility, requirement documents and copy details (or explicit **None**), process-step actions, fees and processing time, responsible-person designation and office, and totals. For a free service enter **None** in each applicable Fees cell **and** Total Fees. A blank fee is not silently treated as free.
+
+**Important:** Automated checks can screen for missing entries and likely personal names but **cannot confirm** that a position is an authorized plantilla item without an approved agency position list. Staff must verify position titles and substantive accuracy against their office's authoritative records. The application remains on-device, and the check does not send data to a server.
+
+Unfinished work remains editable in the page and temporarily backed up for the current browser session, but **incomplete JSON may not be exported or reopened**. Complete the validation before closing the browser if a file is needed. Run automated validation regression checks with `node tests/readiness-validation.test.cjs`.
+
 ## PDF Converter
 Drag & drop or select up to 20 DOCX files (50 MB each), press **Convert to PDF**, and download the PDFs individually or all at once. The browser may request permission for multiple downloads.
 
