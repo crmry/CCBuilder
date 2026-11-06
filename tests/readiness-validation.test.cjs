@@ -437,3 +437,72 @@ assert.equal((repeatedInvalid.html.match(/Information Systems Analyst III/g)||[]
   'One explicit click corrects exactly one occurrence');
 
 console.log('Suggestive plantilla autocorrection: 19 checks passed.');
+
+
+// Regression: CKEditor numbered lists render "1." / "2." visually, but their
+// saved HTML can contain only <ol><li> text, without literal step numbers.
+// The first agency action may also be a plain "1." rather than "1.1".
+const visualNumbering=copy();
+visualNumbering.processOverview[0].clientSteps=
+  '<ol><li>Submit Job Order Request Form to IMISS Office</li></ol>';
+visualNumbering.processOverview[0].agencyActions=
+  '<p>1. Receive and verify Job Order Request Form</p>';
+visualNumbering.processOverview.push(
+  {
+    clientSteps:'<p>&nbsp;</p>',
+    agencyActions:'<p>1.2Assess and classify request and endorse to IMISS Head</p>',
+    feesToBePaid:'None',processingTime:'10 minutes',
+    personResponsible:'<p>Nursing Attendant II</p><p>IMISS Office</p>'
+  },
+  {
+    clientSteps:'',
+    agencyActions:'<p>1.3 Evaluate Job Order Request</p>',
+    feesToBePaid:'None',processingTime:'10 minutes',
+    personResponsible:'<p>Supervising Health Program Officer</p><p>IMISS Office</p>'
+  },
+  {
+    clientSteps:'<p></p>',
+    agencyActions:'<p>1.4 Troubleshooting and corrective actions</p>',
+    feesToBePaid:'None',processingTime:'10 minutes',
+    personResponsible:'<p>Computer Maintenance Technologist III</p><p>IMISS Office</p>'
+  },
+  {
+    clientSteps:'<ol><li>Answer the Client Experience Survey Form</li></ol>',
+    agencyActions:'<p>2. IHOMS staff administer the Client Experience Survey</p>',
+    feesToBePaid:'None',processingTime:'10 minutes',
+    personResponsible:'<p>Nursing Attendant II</p><p>IMISS Office</p>'
+  }
+);
+assert.equal(validate(visualNumbering).length,0,
+  'Visually numbered first Client Step with plain 1. agency action must allow blank 1.2–1.4 rows');
+assert(!validate(visualNumbering).some(issue=>/Step [234]: Client Steps/.test(issue.label)),
+  'Do not warn that continuation rows need Client Steps when the first row uses CKEditor ordered lists');
+
+const visualSecondGroup=JSON.parse(JSON.stringify(visualNumbering));
+visualSecondGroup.processOverview.push({
+  clientSteps:'',agencyActions:'<p>2.2 Record survey responses</p>',
+  feesToBePaid:'None',processingTime:'10 minutes',
+  personResponsible:'<p>Administrative Aide IV</p><p>IMISS Office</p>'
+});
+assert.equal(validate(visualSecondGroup).length,0,
+  'Next visually numbered Client Step establishes group 2 for 2.2 continuation');
+
+const wrongMajorWithVisualList=JSON.parse(JSON.stringify(visualNumbering));
+wrongMajorWithVisualList.processOverview[1].agencyActions='<p>2.2 Assess the request</p>';
+assert(validate(wrongMajorWithVisualList).some(issue=>issue.label.includes('Step 2: Client Steps')),
+  'Do not mistakenly accept 2.2 as a continuation of visually numbered Client Step 1');
+
+const trulyMissingStart=JSON.parse(JSON.stringify(visualNumbering));
+trulyMissingStart.processOverview[0].clientSteps='';
+assert(validate(trulyMissingStart).some(issue=>issue.label.includes('Step 1: Client Steps')),
+  'Still require the first Client Step rather than bypassing all completeness checks');
+
+const suggestionSanity=sandbox.window.ccReplaceSuggestedPlantillaTitle(
+  '<p>Information System Analyst III</p><p>IMISS Office</p>',
+  'Information System Analyst III','Information Systems Analyst III');
+assert.equal(suggestionSanity.changed,true,
+  'Previous plantilla suggestion feature must continue to work after regex repair');
+assert(suggestionSanity.html.includes('<p>Information Systems Analyst III</p>'));
+assert(suggestionSanity.html.includes('<p>IMISS Office</p>'));
+
+console.log('CKEditor visual numbered-list continuation: 7 checks passed.');

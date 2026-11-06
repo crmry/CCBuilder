@@ -86,7 +86,7 @@
     const reference=window.CCPlantillaPositions;
     if(!previous || !suggested || !reference || !reference.match(suggested))
       return {html:input,changed:false};
-    const escaped=previous.replace(/[.*+?^$()|[\]{}\\]/g,'\\  function numberedAgencyActions(value) {').replace(/\s+/g,'\\s+');
+    const escaped=previous.replace(/[.*+?^$()|[\]{}\\]/g,'\\$&').replace(/\s+/g,'\\s+');
     const regex=new RegExp('(^|[^A-Za-z0-9])('+escaped+')(?=$|[^A-Za-z0-9])','i');
     const fragments=input.split(/(<[^>]*>)/g);
     let changed=false;
@@ -188,6 +188,7 @@
       add('Process Overview', 'Process Steps', 'Add at least one complete process step.', '#processOverviewTable');
     } else {
       let activeClientStep = null;
+      let clientStepGroups = 0;
       let lastAgencyAction = null;
       data.processOverview.forEach((row, index) => {
         const n = index + 1;
@@ -199,9 +200,14 @@
         const lastAction = actionNumbers[actionNumbers.length-1] || null;
         const hasClientStep = filled(entry.clientSteps);
         if (hasClientStep) {
+          clientStepGroups += 1;
           const explicitNumber = numberedClientStep(entry.clientSteps);
+          // CKEditor can render ordered list markers ("1.", "2.") with CSS,
+          // omitting those numbers from the serialized <ol><li> text.
+          // Infer the active step from its group order when numbering is not
+          // explicitly present in Client Steps or Agency Actions.
           activeClientStep = explicitNumber !== null ? explicitNumber :
-            (firstAction ? firstAction.major : null);
+            (firstAction ? firstAction.major : clientStepGroups);
         } else {
           // A numbered agency sub-action belongs to its active Client Step.
           // Do not reject a blank Client Steps cell simply because a previous
