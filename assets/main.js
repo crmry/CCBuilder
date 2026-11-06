@@ -480,7 +480,7 @@
 		        agencyActions: 'Numbered action per step (e.g., 1.1 Receive documents, verify completeness against checklist, and issue acknowledgment receipt)',
 		        feesToBePaid: 'Type of Fee: Currency Amount (e.g., Certification Fee: PHP 50.00) or "None" (Ranging is prohibited)',
 		        processingTime: 'Exact duration: # Day/s, # Hour/s, # Minute/s (e.g., 15 minutes or 1 Day, 2 Hours) (Ranging is prohibited)',
-		        personResponsible: 'Official plantilla title(s) and responsible office (e.g., Nurse Attendant II / Administrative Aide IV, IMISS Office). Multiple titles may appear on separate lines above their office.'
+		        personResponsible: 'Use the exact approved plantilla title(s) (e.g., Nursing Attendant II, Administrative Aide IV), with the responsible office (e.g., IMISS Office). Multiple positions can be listed on separate lines.'
 		    };
 
 		    const fields = [{
@@ -1637,7 +1637,7 @@
 		                element: '#processOverviewTable tfoot',
 		                popover: {
 		                    title: 'Fees, Processing Time and Responsible Person',
-		                    description: '<strong>ARTA Specification Rules:</strong><br><br>• <strong>Fees:</strong> Type + Currency + Amount (e.g., <code>Certification Fee: PHP 50.00</code>) or <code>None</code>. ⚠️ <em>Ranging (e.g. PHP 50-100) is illegal!</em><br>• <strong>Processing Time:</strong> Exact duration in Days, Hours, Minutes (1 day = 8 working hours). ⚠️ <em>Ranging (e.g. "1-2 hours") is prohibited!</em><br>• <strong>Person Responsible:</strong> Write the <strong>official plantilla position title(s) and responsible office</strong> (e.g., <code>Nurse Attendant II</code>, <code>Administrative Aide IV</code>, followed by <code>IMISS Office</code>). Multiple position titles may appear on separate lines. If personnel rotates, use the <em>Immediate Supervisor\'s Designation and Office</em>. ⚠️ <em>Do NOT use personal employee names!</em>',
+		                    description: '<strong>ARTA Specification Rules:</strong><br><br>• <strong>Fees:</strong> Type + Currency + Amount (e.g., <code>Certification Fee: PHP 50.00</code>) or <code>None</code>. ⚠️ <em>Ranging (e.g. PHP 50-100) is illegal!</em><br>• <strong>Processing Time:</strong> Exact duration in Days, Hours, Minutes (1 day = 8 working hours). ⚠️ <em>Ranging (e.g. "1-2 hours") is prohibited!</em><br>• <strong>Person Responsible:</strong> Write the <strong>official plantilla position title(s) and responsible office</strong> (e.g., <code>Nursing Attendant II</code>, <code>Administrative Aide IV</code>, followed by <code>IMISS Office</code>). Each title must match the supplied plantilla position list. Multiple titles may appear on separate lines. If personnel rotates, use the <em>Immediate Supervisor\'s Designation and Office</em>. ⚠️ <em>Do NOT use personal employee names!</em>',
 		                    side: 'top',
 		                    align: 'start'
 		                }

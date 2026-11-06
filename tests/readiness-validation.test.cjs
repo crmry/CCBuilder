@@ -4,10 +4,12 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 
 const src = fs.readFileSync('assets/validation.js', 'utf8');
+const positionSrc = fs.readFileSync('assets/plantilla-positions.js', 'utf8');
 const sandbox = {
   window: {},
   document: { createElement() { throw new Error('TEST_SETUP_DONE'); } }
 };
+vm.runInNewContext(positionSrc, sandbox, {filename:'assets/plantilla-positions.js'});
 try {
   vm.runInNewContext(src, sandbox, {filename:'assets/validation.js'});
   throw new Error('Validation script should reach DOM setup.');
@@ -117,11 +119,11 @@ console.log('Precise readiness field navigation: 8 checks passed.');
 const continued=copy();
 continued.processOverview[0].clientSteps='<p>1. Submit request to Receiving Section</p>';
 continued.processOverview[0].agencyActions='<p>1.1 Receive and assess request</p>';
-continued.processOverview[0].personResponsible='<p>Nurse Attendant II</p><p>Administrative Aide IV</p><p>IMISS Office</p>';
+continued.processOverview[0].personResponsible='<p>Nursing Attendant II</p><p>Administrative Aide IV</p><p>IMISS Office</p>';
 continued.processOverview.push({
   clientSteps:'<p></p>',agencyActions:'<p>1.2 Assess and classify request</p>',
   feesToBePaid:'None',processingTime:'10 minutes',
-  personResponsible:'<p>Nurse Attendant II</p><p>Administrative Aide IV</p><p>IMISS Office</p>'
+  personResponsible:'<p>Nursing Attendant II</p><p>Administrative Aide IV</p><p>IMISS Office</p>'
 }, {
   clientSteps:'',agencyActions:'<p>1.3 Evaluate request</p>',
   feesToBePaid:'None',processingTime:'10 minutes',
@@ -129,12 +131,12 @@ continued.processOverview.push({
 }, {
   clientSteps:'',agencyActions:'<p>1.4 Troubleshooting and corrective actions</p>',
   feesToBePaid:'None',processingTime:'10 minutes',
-  personResponsible:'<p>Nurse Attendant II</p><p>Ward Assistant</p><p>Computer Maintenance Technologist III</p><p>IMISS Office</p>'
+  personResponsible:'<p>Nursing Attendant II</p><p>Ward Assistant</p><p>Computer Maintenance Technologist III</p><p>IMISS Office</p>'
 });
 assert.equal(validate(continued).length,0,'Multiline plantilla titles and Agency Action 1.1–1.4 continuation must pass');
 
 const newlinePositions=copy();
-newlinePositions.processOverview[0].personResponsible='Nurse Attendant II\nAdministrative Aide IV\nIMISS Office';
+newlinePositions.processOverview[0].personResponsible='Nursing Attendant II\nAdministrative Aide IV\nIMISS Office';
 assert.equal(validate(newlinePositions).length,0,'Newline-separated roles sharing an office must pass');
 
 const singlePosition=copy();
@@ -142,7 +144,7 @@ singlePosition.processOverview[0].personResponsible='<p>Supervising Health Progr
 assert.equal(validate(singlePosition).length,0,'Single plantilla title with an office on the next line must pass');
 
 const missingOffice=copy();
-missingOffice.processOverview[0].personResponsible='<p>Nurse Attendant II</p><p>Administrative Aide IV</p>';
+missingOffice.processOverview[0].personResponsible='<p>Nursing Attendant II</p><p>Administrative Aide IV</p>';
 assert(validate(missingOffice).some(issue=>issue.label.includes('Person Responsible')),
   'Missing office should still fail');
 
@@ -186,3 +188,68 @@ assert.equal(validate(multiActionInOneRow).length,0,
   'The last sub-action within a rich-text cell should set the continuation number');
 
 console.log('Continuation and plantilla regression: 11 scenarios passed.');
+
+
+// The complete source-provided position catalogue is used for validation.
+assert.equal(sandbox.window.CCPlantillaPositions.titles.length,130,'All 130 supplied titles must be present');
+assert.equal(sandbox.window.CCPlantillaPositions.match(' nursing attendant II '),'Nursing Attendant II');
+assert.equal(sandbox.window.CCPlantillaPositions.match('Nurse Attendant II'),null);
+assert.equal(sandbox.window.CCPlantillaPositions.match('Seamtress'),'Seamtress','Do not silently edit provided source text');
+
+const officialPositionList=copy();
+officialPositionList.processOverview[0].personResponsible=
+  '<p>Nursing Attendant II</p><p>Administrative Aide IV</p><p>Information Systems Analyst III</p><p>IMISS Office</p>';
+assert.equal(validate(officialPositionList).length,0,'Multiple listed plantilla titles with one office must pass');
+
+const suppliedTypo=copy();
+suppliedTypo.processOverview[0].personResponsible='<p>Nurse Attendant II</p><p>IMISS Office</p>';
+const suggestedTypo=validate(suppliedTypo).find(x=>x.label.includes('Person Responsible'));
+assert(suggestedTypo && suggestedTypo.message.includes('Nursing Attendant II'),
+  'Mismatch must suggest the exact title from the supplied list');
+
+const analystTypo=copy();
+analystTypo.processOverview[0].personResponsible=
+  '<p>Information System Analyst III</p><p>IMISS Office</p>';
+assert(validate(analystTypo).some(x=>x.message.includes('Information Systems Analyst III')),
+  'Near-match should suggest listed Information Systems Analyst III');
+
+const otherOfficial=copy();
+otherOfficial.processOverview[0].personResponsible='<p>Ward Assistant</p><p>IMISS Office</p>';
+assert.equal(validate(otherOfficial).length,0,'Ward Assistant is a plantilla title, not an office name');
+
+const knownChief=copy();
+knownChief.processOverview[0].personResponsible='<p>Medical Center Chief II</p><p>Medical Center Office</p>';
+assert.equal(validate(knownChief).length,0,'Exact position with Center should pass when followed by office');
+
+const noOfficeChief=copy();
+noOfficeChief.processOverview[0].personResponsible='Medical Center Chief II';
+assert(validate(noOfficeChief).some(x=>x.label.includes('Person Responsible')),
+  'Known titles that include Center still require an office');
+
+const wrongGrade=copy();
+wrongGrade.processOverview[0].personResponsible='<p>Administrative Aide II</p><p>IMISS Office</p>';
+assert(validate(wrongGrade).some(x=>x.label.includes('Person Responsible')),
+  'Grade absent from supplied positions must be rejected');
+assert.equal(sandbox.window.CCPlantillaPositions.closest('Administrative Aide II'),null,
+  'Do not suggest a different position family or grade for a missing title');
+
+const unknownWithOffice=copy();
+unknownWithOffice.processOverview[0].personResponsible='<p>Juan Dela Cruz</p><p>IMISS Office</p>';
+assert(validate(unknownWithOffice).some(x=>x.label.includes('Person Responsible')),
+  'A personal name must not pass by having a valid office');
+
+const flattened=copy();
+flattened.processOverview[0].personResponsible='Nursing Attendant II IMISS Office';
+assert.equal(validate(flattened).length,0,'Flattened title and office should remain usable');
+
+const flattenedTypo=copy();
+flattenedTypo.processOverview[0].personResponsible='Nurse Attendant II IMISS Office';
+assert(validate(flattenedTypo).some(x=>x.message.includes('Nursing Attendant II')),
+  'Flattened typo must still produce a correction suggestion');
+
+const officeOnly=copy();
+officeOnly.processOverview[0].personResponsible='<p>IMISS Office</p>';
+assert(validate(officeOnly).some(x=>x.label.includes('Person Responsible')),
+  'Office-only fields must not pass');
+
+console.log('Plantilla position reference: 12 cases passed.');
