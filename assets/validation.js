@@ -159,6 +159,10 @@
     .cc-ready-inline-error strong { font-weight:700; display:block; color:#983e35; margin-bottom:2px; }
     .cc-ready-inline-error span { display:block; }
     .cc-ready-inline-error .cc-ready-inline-extra { margin-top:3px; }
+    #cc-ready-review-link[hidden] { display:none !important; }
+    #cc-ready-review-link { position:fixed; bottom:20px; right:20px; z-index:1050; border:1px solid #e0b1a9; box-shadow:0 5px 18px rgba(15,23,42,.12); background:#fff; color:#92483f; border-radius:9px; padding:10px 14px; font-size:13px; font-weight:700; cursor:pointer; }
+    #cc-ready-review-link:hover { border-color:#b6574c; background:#fff9f7; }
+    @media(max-width:600px) { #cc-ready-review-link { bottom:12px; right:12px; font-size:12px; padding:9px 11px; } }
     @media(max-width:600px) { .cc-ready-head,.cc-ready-body {padding-left:16px;padding-right:16px;} .cc-ready-footer {padding:12px 16px;} .cc-ready-issue {align-items:flex-start;flex-direction:column;gap:8px;} }
   `;
   const style = document.createElement('style');
@@ -179,6 +183,14 @@
     ' <div class="cc-ready-footer"><small id="cc-ready-count"></small>' +
     ' <button class="cc-ready-close" type="button">Close</button></div></div>';
   document.body.appendChild(modal);
+
+  const reviewButton = document.createElement('button');
+  reviewButton.type = 'button';
+  reviewButton.id = 'cc-ready-review-link';
+  reviewButton.hidden = true;
+  reviewButton.setAttribute('aria-label', 'Review remaining Citizen Charter readiness issues');
+  reviewButton.addEventListener('click', () => window.checkCharterReadiness());
+  document.body.appendChild(reviewButton);
 
   let previousFocus = null;
   const close = () => {
@@ -218,6 +230,8 @@
 
   function markFields(issues) {
     clearFieldMarkers();
+    reviewButton.hidden = issues.length === 0;
+    reviewButton.textContent = issues.length + (issues.length === 1 ? ' issue · Review' : ' issues · Review');
     const groups = new Map();
     issues.forEach(issue => {
       if (!issue.target) return;
@@ -361,5 +375,11 @@
   window.checkCharterReadiness = function () {
     if (typeof collectCurrentFormData === 'function')
       window.validateCitizenCharterForAction(collectCurrentFormData(), 'check');
+  };
+  window.resetCharterReadiness = function () {
+    annotationsShown = false;
+    window.clearTimeout(annotationTimer);
+    clearFieldMarkers();
+    reviewButton.hidden = true;
   };
 })();
