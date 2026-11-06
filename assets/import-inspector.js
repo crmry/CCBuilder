@@ -170,34 +170,7 @@
     }
     return true;
   }
-  window.importFormData=function(event){
-    const input=event.target,file=input.files&&input.files[0];
-    if(!file)return;
-    const reader=new FileReader();
-    reader.onerror=()=>{
-      present(file.name,[{section:'File',label:'Cannot read file',message:'The browser could not read this file.',jsonPath:'$'}],null,false);
-      input.value='';
-    };
-    reader.onload=event=>{
-      const raw=String(event.target.result||'');
-      let data;
-      try {data=JSON.parse(raw);}
-      catch(error){
-        present(file.name,[{section:'JSON syntax',label:'Invalid JSON',
-          message:syntaxDetails(error,raw),jsonPath:'$'}],null,false);
-        input.value='';
-        return;
-      }
-      const shapeErrors=structureIssues(data);
-      if(shapeErrors.length){
-        present(file.name,shapeErrors,data,false);
-      }else{
-        const issues=window.validateCharterData(data);
-        if(issues.length)present(file.name,issues,data,true,()=>load(data,file.name,true));
-        else load(data,file.name,false);
-      }
-      input.value='';
-    };
-    reader.readAsText(file);
-  };
+  // This module renders the import review only. The Builder owns the sole
+  // file input handler, so the native Open action cannot be overridden.
+  window.ccImportReview={present,close,jsonPath,jsonValue,displayValue,structureIssues,syntaxDetails};
 })();
