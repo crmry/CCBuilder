@@ -110,3 +110,79 @@ assert(validate(multipleErrors).some(issue => issue.target.endsWith('td:nth-chil
 
 console.log('Precise readiness field navigation: 8 checks passed.');
 
+
+
+// A single Client Step can have multiple consecutive Agency Actions.
+// Rows with 1.2, 1.3, 1.4 do not require duplicating Client Steps.
+const continued=copy();
+continued.processOverview[0].clientSteps='<p>1. Submit request to Receiving Section</p>';
+continued.processOverview[0].agencyActions='<p>1.1 Receive and assess request</p>';
+continued.processOverview[0].personResponsible='<p>Nurse Attendant II</p><p>Administrative Aide IV</p><p>IMISS Office</p>';
+continued.processOverview.push({
+  clientSteps:'<p></p>',agencyActions:'<p>1.2 Assess and classify request</p>',
+  feesToBePaid:'None',processingTime:'10 minutes',
+  personResponsible:'<p>Nurse Attendant II</p><p>Administrative Aide IV</p><p>IMISS Office</p>'
+}, {
+  clientSteps:'',agencyActions:'<p>1.3 Evaluate request</p>',
+  feesToBePaid:'None',processingTime:'10 minutes',
+  personResponsible:'<p>Supervising Health Program Officer</p><p>IMISS Office</p>'
+}, {
+  clientSteps:'',agencyActions:'<p>1.4 Troubleshooting and corrective actions</p>',
+  feesToBePaid:'None',processingTime:'10 minutes',
+  personResponsible:'<p>Nurse Attendant II</p><p>Ward Assistant</p><p>Computer Maintenance Technologist III</p><p>IMISS Office</p>'
+});
+assert.equal(validate(continued).length,0,'Multiline plantilla titles and Agency Action 1.1–1.4 continuation must pass');
+
+const newlinePositions=copy();
+newlinePositions.processOverview[0].personResponsible='Nurse Attendant II\nAdministrative Aide IV\nIMISS Office';
+assert.equal(validate(newlinePositions).length,0,'Newline-separated roles sharing an office must pass');
+
+const singlePosition=copy();
+singlePosition.processOverview[0].personResponsible='<p>Supervising Health Program Officer</p><p>IMISS Office</p>';
+assert.equal(validate(singlePosition).length,0,'Single plantilla title with an office on the next line must pass');
+
+const missingOffice=copy();
+missingOffice.processOverview[0].personResponsible='<p>Nurse Attendant II</p><p>Administrative Aide IV</p>';
+assert(validate(missingOffice).some(issue=>issue.label.includes('Person Responsible')),
+  'Missing office should still fail');
+
+const personalNameWithOffice=copy();
+personalNameWithOffice.processOverview[0].personResponsible='<p>Juan Dela Cruz</p><p>IMISS Office</p>';
+assert(validate(personalNameWithOffice).some(issue=>issue.label.includes('Person Responsible')),
+  'Personal name + office should still fail');
+
+const missingInitialStep=copy();
+missingInitialStep.processOverview[0].clientSteps='';
+assert(validate(missingInitialStep).some(issue=>issue.label.includes('Client Steps')),
+  'The first row must have a Client Step');
+
+const skippedSubaction=JSON.parse(JSON.stringify(continued));
+skippedSubaction.processOverview[1].agencyActions='<p>1.3 Assess and classify request</p>';
+assert(validate(skippedSubaction).some(issue=>issue.label.includes('Step 2: Client Steps')),
+  'Skipped sub-action number must not silently authorize a blank Client Step');
+
+const mismatchedSubaction=JSON.parse(JSON.stringify(continued));
+mismatchedSubaction.processOverview[1].agencyActions='<p>2.1 Assess and classify request</p>';
+assert(validate(mismatchedSubaction).some(issue=>issue.label.includes('Step 2: Client Steps')),
+  'A different major Agency Action must not silently authorize a blank Client Step');
+
+const unnumberedSubaction=JSON.parse(JSON.stringify(continued));
+unnumberedSubaction.processOverview[1].agencyActions='<p>Assess and classify request</p>';
+assert(validate(unnumberedSubaction).some(issue=>issue.label.includes('Step 2: Client Steps')),
+  'A blank Client Step with an unnumbered Agency Action should fail');
+
+const secondClientGroup=JSON.parse(JSON.stringify(continued));
+secondClientGroup.processOverview[2].clientSteps='<p>2. Claim processed documents</p>';
+secondClientGroup.processOverview[2].agencyActions='<p>2.1 Release approved form</p>';
+secondClientGroup.processOverview[3].agencyActions='<p>2.2 Provide receipt</p>';
+assert.equal(validate(secondClientGroup).length,0,'A new numbered Client Step should begin a new Agency Action group');
+
+const multiActionInOneRow=JSON.parse(JSON.stringify(continued));
+multiActionInOneRow.processOverview[0].agencyActions='<p>1.1 Receive request</p><p>1.2 Review request</p>';
+multiActionInOneRow.processOverview[1].agencyActions='<p>1.3 Assess request</p>';
+multiActionInOneRow.processOverview[2].agencyActions='<p>1.4 Evaluate request</p>';
+multiActionInOneRow.processOverview[3].agencyActions='<p>1.5 Complete request</p>';
+assert.equal(validate(multiActionInOneRow).length,0,
+  'The last sub-action within a rich-text cell should set the continuation number');
+
+console.log('Continuation and plantilla regression: 11 scenarios passed.');
