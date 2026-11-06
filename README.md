@@ -33,7 +33,7 @@ Unrecognized titles are flagged with the original text and, when a close match i
 
 ### Client Step continuations and responsible plantilla positions
 
-A single numbered **Client Step** may span multiple numbered **Agency Actions**. Enter the client step on the first row (for example **1. Submit request**), then intentionally leave the Client Steps cells blank on subsequent rows if their agency actions continue in order as **1.2**, **1.3**, **1.4**, etc. The checker rejects a blank initial client step or an unrelated, out-of-sequence action. A new client step starts a new group.
+A single numbered **Client Step** may span multiple **Agency Actions**. Enter the client step on the first row (for example **1. Submit request**) and leave Client Steps blank on the continuation rows (**1.2**, **1.3**, **1.4**, etc.). The parser also recognizes compact text such as `1.2Assess` and rich text split around the action number. A blank initial Client Step or an action from a different major step still needs correction. Duplicate/skipped agency sub-action numbers are flagged **under Agency Actions**, not under the intentionally blank Client Steps. When the client takes a new action (e.g. **2. Answer the Client Experience Survey Form**), enter a new Client Step.
 
 **Person Responsible** accepts multiple official plantilla positions in one cell, including a line-by-line list followed by the shared office (for example **Nurse Attendant II**, **Administrative Aide IV**, and **IMISS Office**). The checker still warns about missing offices and names without recognizable position titles. Automated matching is not an authoritative plantilla registry; confirm actual positions with the agency's approved plantilla records.
 
