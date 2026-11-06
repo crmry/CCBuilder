@@ -72,10 +72,33 @@
     const invalid=positions.filter(title=>!reference.match(title));
     if(invalid.length){
       const invalidTitle=invalid[0];
-      return {kind:'position',title:invalidTitle,suggestion:reference.closest(invalidTitle)};
+      return {
+        kind:'position',title:invalidTitle,suggestion:reference.closest(invalidTitle),
+        invalidTitles:invalid.map(title=>({title,suggestion:reference.closest(title)}))
+      };
     }
     return null;
   }
+
+  // Changes text only; HTML tags, other titles and the office are unchanged.
+  function replaceSuggestedPlantillaTitle(html, previous, suggested) {
+    const input=String(typeof html==='string'?html:'');
+    const reference=window.CCPlantillaPositions;
+    if(!previous || !suggested || !reference || !reference.match(suggested))
+      return {html:input,changed:false};
+    const escaped=previous.replace(/[.*+?^$()|[\]{}\\]/g,'\\  function numberedAgencyActions(value) {').replace(/\s+/g,'\\s+');
+    const regex=new RegExp('(^|[^A-Za-z0-9])('+escaped+')(?=$|[^A-Za-z0-9])','i');
+    const fragments=input.split(/(<[^>]*>)/g);
+    let changed=false;
+    for(let i=0;i<fragments.length;i+=2){
+      if(!regex.test(fragments[i]))continue;
+      fragments[i]=fragments[i].replace(regex,(_,prefix)=>prefix+suggested);
+      changed=true;
+      break;
+    }
+    return {html:changed?fragments.join(''):input,changed};
+  }
+  window.ccReplaceSuggestedPlantillaTitle=replaceSuggestedPlantillaTitle;
 
   function numberedAgencyActions(value) {
     const parsed=[];
@@ -113,7 +136,8 @@
 
   function validateCharterData(data) {
     const issues = [];
-    const add = (section, label, message, target) => issues.push({ section, label, message, target });
+    const add = (section, label, message, target, fix = null) =>
+      issues.push({section,label,message,target,...(fix?{fix}:{})});
 
     if (!data || typeof data !== 'object' || Array.isArray(data)) {
       add('File', 'Data format', 'This file does not contain valid Citizen Charter data.', null);
@@ -236,13 +260,19 @@
             message='Enter a title from the plantilla list and the responsible office.';
           }else if(responsibleIssue.kind==='office'){
             message='Add the responsible office, section, or unit. List the plantilla title(s) above it.';
-          }else if(responsibleIssue.title){
-            message='“'+responsibleIssue.title+'” was not found in the plantilla list.'+
-              (responsibleIssue.suggestion?' Suggested title: “'+responsibleIssue.suggestion+'”.':' Check the exact approved title and position level.');
+          }else if(responsibleIssue.invalidTitles?.length){
+            // Surface each invalid title so each suggestion can be accepted.
+            responsibleIssue.invalidTitles.forEach(({title,suggestion})=>{
+              const detail='“'+title+'” is not in the supplied plantilla list.'+
+                (suggestion?' Suggested title: “'+suggestion+'”.':' Verify the exact title and grade.');
+              add('Process Overview','Step '+n+': Person Responsible',detail,cell(5),
+                suggestion?{kind:'plantilla',from:title,to:suggestion}:null);
+            });
+            message=null;
           }else{
             message='Enter an approved plantilla position title above the responsible office.';
           }
-          add('Process Overview','Step '+n+': Person Responsible',message,cell(5));
+          if(message) add('Process Overview','Step '+n+': Person Responsible',message,cell(5));
         }
 
       });
@@ -291,6 +321,11 @@
     .cc-ready-issue span { font-size:12px; color:#66778b; display:block; margin-top:3px; line-height:1.45; }
     .cc-ready-go { border:1px solid #cbd5e1; border-radius:6px; background:#f8fafc; white-space:nowrap; padding:7px 11px; color:#334155; font-size:12px; font-weight:600; cursor:pointer; }
     .cc-ready-go:hover { border-color:#2563eb; color:#1d4ed8; }
+    .cc-ready-suggestion {margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+    .cc-ready-suggestion button, .cc-ready-apply-all {border:1px solid #a3b9cf;border-radius:6px;background:#f3f8fc;color:#254c72;padding:7px 10px;font-size:12px;font-weight:650;cursor:pointer;text-align:left;}
+    .cc-ready-suggestion button:hover, .cc-ready-apply-all:hover {background:#e6f1fd;border-color:#6089b4;}
+    .cc-ready-apply-all[hidden] {display:none!important;}
+    .cc-ready-footer-actions {display:flex;align-items:center;gap:9px;flex-wrap:wrap;justify-content:flex-end;}
     .cc-ready-footer { border-top:1px solid #e5eaf0; padding:13px 24px; display:flex; justify-content:space-between; align-items:center; gap:12px; }
     .cc-ready-footer small { color:#778498; font-size:12px; }
     .cc-ready-close { background:#243b5a; color:#fff; border:0; padding:9px 20px; border-radius:7px; font-size:13px; font-weight:650; cursor:pointer; }
@@ -322,7 +357,8 @@
     ' <h3 id="cc-ready-title"></h3><p id="cc-ready-description"></p></div>' +
     ' <div class="cc-ready-body" id="cc-ready-issues"></div>' +
     ' <div class="cc-ready-footer"><small id="cc-ready-count"></small>' +
-    ' <button class="cc-ready-close" type="button">Close</button></div></div>';
+    ' <div class="cc-ready-footer-actions"><button class="cc-ready-apply-all" type="button" hidden>Apply all suggested titles</button>' +
+    ' <button class="cc-ready-close" type="button">Close</button></div></div></div>';
   document.body.appendChild(modal);
 
   const reviewButton = document.createElement('button');
@@ -398,6 +434,7 @@
         if (i > 0) detail.className = 'cc-ready-inline-extra';
         detail.textContent = problem.message;
         note.appendChild(detail);
+        appendSuggestionButton(note,problem);
       });
       // Tables need a sibling rather than inserting arbitrary children into a table.
       if (marker.tagName === 'TABLE' || marker.matches('.option-grid, #description-tour-target') || marker.matches('input, textarea, select')) {
@@ -422,6 +459,69 @@
     return true;
   }
 
+  function currentReadinessIssues() {
+    if(typeof collectCurrentFormData!=='function')return null;
+    const data=collectCurrentFormData();
+    return data?validateCharterData(data):null;
+  }
+
+  // Edit only the CKEditor row corresponding to the invalid title. The
+  // remaining titles and office are preserved by the text-only replacement.
+  function applyPlantillaSuggestion(issue, refresh = true) {
+    const fix=issue?.fix;
+    if(!fix || fix.kind!=='plantilla' || !fix.from || !fix.to)return false;
+    const cell=issue.target?document.querySelector(issue.target):null;
+    const source=cell?.querySelector('[id^="personResponsible-"]');
+    if(!source || typeof processOverviewEditors==='undefined')return false;
+    const rowIndex=Number(source.id.slice('personResponsible-'.length));
+    const found=processOverviewEditors.find(item=>item.type==='personResponsible' && item.index===rowIndex);
+    const editor=found?.editor;
+    if(!editor || typeof editor.getData!=='function' || typeof editor.setData!=='function')
+      return false;
+    const revised=replaceSuggestedPlantillaTitle(editor.getData(),fix.from,fix.to);
+    if(!revised.changed)return false;
+    editor.setData(revised.html);
+    if(refresh){
+      const issues=currentReadinessIssues();
+      if(issues) {
+        if(!modal.hidden)showIssues(issues,'check');
+        else markFields(issues);
+      }
+    }
+    return true;
+  }
+
+  function appendSuggestionButton(parent,issue) {
+    if(!issue.fix?.to)return;
+    const container=document.createElement('div');
+    container.className='cc-ready-suggestion';
+    const button=document.createElement('button');
+    button.type='button';
+    button.textContent='Apply: '+issue.fix.to;
+    button.setAttribute('aria-label','Replace '+issue.fix.from+' with '+issue.fix.to);
+    button.addEventListener('click',()=>{
+      if(!applyPlantillaSuggestion(issue)){
+        const issues=currentReadinessIssues();
+        if(issues) {
+          if(!modal.hidden)showIssues(issues,'check');
+          else markFields(issues);
+        }
+      }
+    });
+    container.appendChild(button);
+    parent.appendChild(container);
+  }
+
+  window.ccApplyPlantillaSuggestion=issue=>applyPlantillaSuggestion(issue);
+  const applyAllButton=modal.querySelector('.cc-ready-apply-all');
+  applyAllButton.addEventListener('click',()=>{
+    const issues=currentReadinessIssues();
+    if(!issues)return;
+    issues.filter(issue=>issue.fix?.to).forEach(issue=>applyPlantillaSuggestion(issue,false));
+    const remaining=currentReadinessIssues();
+    if(remaining)showIssues(remaining,'check');
+  });
+
   modal.querySelector('.cc-ready-close').addEventListener('click', close);
   modal.addEventListener('click', e => { if (e.target === modal) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modal.hidden) close(); });
@@ -444,6 +544,7 @@
     const body = modal.querySelector('#cc-ready-issues');
     body.replaceChildren();
     if (!isImport) markFields(issues);
+    applyAllButton.hidden=isImport || issues.filter(issue=>issue.fix?.to).length<2;
 
     if (!blocked) {
       const ok = document.createElement('p');
@@ -467,6 +568,7 @@
           const detail = document.createElement('span');
           detail.textContent = issue.message;
           content.append(label, detail);
+          if(!isImport)appendSuggestionButton(content,issue);
           item.appendChild(content);
           if (!isImport && issue.target) {
             const jump = document.createElement('button');

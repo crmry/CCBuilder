@@ -372,3 +372,68 @@ assert(!duplicationIssues.some(issue=>issue.label.includes('Step 2: Client Steps
   'Repeated agency action number must not incorrectly mark Client Steps');
 
 console.log('Screenshot continuation regression: 6 cases passed.');
+
+
+// Suggestive autocorrection: each mismatched role is presented independently.
+// Nothing is modified until the user explicitly accepts a suggestion.
+const mixedAnalysts=copy();
+mixedAnalysts.processOverview[0].personResponsible=
+  '<p>Nursing Attendant II</p>'+
+  '<p>Ward Assistant</p>'+
+  '<p>Information System Analyst III</p>'+
+  '<p>Information System Analyst II</p>'+
+  '<p>Information System Analyst I</p>'+
+  '<p>IMISS Office</p>';
+const threeFixes=validate(mixedAnalysts).filter(issue=>issue.fix?.kind==='plantilla');
+assert.equal(threeFixes.length,3,'Every incorrect analyst title must have its own suggestion');
+assert.deepEqual(threeFixes.map(issue=>issue.fix.to),
+  ['Information Systems Analyst III','Information Systems Analyst II','Information Systems Analyst I'],
+  'Suggestions must preserve the exact Roman numeral / position grade');
+assert(threeFixes.every(issue=>issue.target.endsWith('td:nth-child(5)')),
+  'Every suggested correction must target the Person Responsible field');
+
+const replaceTitle=sandbox.window.ccReplaceSuggestedPlantillaTitle;
+const originalRoles=mixedAnalysts.processOverview[0].personResponsible;
+assert.equal(replaceTitle(originalRoles,'Information System Analyst III','Information Systems Analyst III').changed,true);
+let corrected=originalRoles;
+for(const issue of threeFixes) {
+  const result=replaceTitle(corrected,issue.fix.from,issue.fix.to);
+  assert(result.changed,'An approved suggestion should apply to the displayed position');
+  corrected=result.html;
+}
+assert(corrected.includes('Information Systems Analyst III'));
+assert(corrected.includes('Information Systems Analyst II'));
+assert(corrected.includes('Information Systems Analyst I'));
+assert(corrected.includes('<p>Nursing Attendant II</p>'));
+assert(corrected.includes('<p>Ward Assistant</p>'));
+assert(corrected.includes('<p>IMISS Office</p>'));
+mixedAnalysts.processOverview[0].personResponsible=corrected;
+assert.equal(validate(mixedAnalysts).length,0,'After explicit corrections, the entire cell must pass readiness');
+
+const sameGrade=replaceTitle('<p>Information System Analyst III</p>',
+  'Information System Analyst II','Information Systems Analyst II');
+assert.equal(sameGrade.changed,false,'Do not replace II inside an unrelated III title');
+assert.equal(sameGrade.html,'<p>Information System Analyst III</p>');
+
+const preserveMarkup=replaceTitle(
+  '<p class="note" data-value="Information System Analyst III"><strong>Information System Analyst III</strong></p>'+
+  '<p>IMISS Office</p>',
+  'Information System Analyst III','Information Systems Analyst III');
+assert(preserveMarkup.changed,'Titles with inline bold styling should be fixable');
+assert(preserveMarkup.html.includes('data-value="Information System Analyst III"'),
+  'Never modify HTML attributes');
+assert(preserveMarkup.html.includes('<strong>Information Systems Analyst III</strong>'),
+  'Keep bold markup around corrected titles');
+assert(preserveMarkup.html.includes('<p>IMISS Office</p>'),'Leave office untouched');
+
+const unknownApproval=replaceTitle('<p>John Doe</p><p>IMISS Office</p>',
+  'John Doe','Unapproved Job Title');
+assert.equal(unknownApproval.changed,false,'Only titles present in the supplied catalogue may be applied');
+
+const repeatedInvalid=replaceTitle(
+  '<p>Information System Analyst III</p><p>Information System Analyst III</p><p>IMISS Office</p>',
+  'Information System Analyst III','Information Systems Analyst III');
+assert.equal((repeatedInvalid.html.match(/Information Systems Analyst III/g)||[]).length,1,
+  'One explicit click corrects exactly one occurrence');
+
+console.log('Suggestive plantilla autocorrection: 19 checks passed.');
