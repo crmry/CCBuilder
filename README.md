@@ -38,6 +38,12 @@ Unrecognized titles are flagged with the original text and, when a close match i
 **Source governance:** the user-supplied list is the validation reference, not independent proof that a job title is an authorized government position or that personnel hold that position. Updates to the agency's actual plantilla should also update the bundled list and its tests. An unavailable reference prevents a clean readiness result rather than silently treating an unverified title as valid.
 
 
+### CKEditor numbered-list continuity
+
+The Readiness Check recognizes that CKEditor's ordered-list toolbar can show a number (for example, **1.**) without storing that number as literal text in the exported rich-text HTML. If the first filled Client Step has no explicit numeric prefix or numbered agency sub-action, the validator uses the **order of nonblank Client Step groups** to determine the active client-step number. Blank Client Steps are accepted for Agency Actions such as **1.2**, **1.3** and **1.4** when they continue the active group. Entering the next nonblank client action begins **Client Step 2**, and later **2.x** actions can continue it.
+
+This does not waive the requirement to enter a first Client Step, and unrelated agency-action groups are still flagged. The earlier optional plantilla-correction replacement regex was also repaired; it remains opt-in, preserving the office and other titles.
+
 ### Client Step continuations and responsible plantilla positions
 
 A single numbered **Client Step** may span multiple **Agency Actions**. Enter the client step on the first row (for example **1. Submit request**) and leave Client Steps blank on the continuation rows (**1.2**, **1.3**, **1.4**, etc.). The parser also recognizes compact text such as `1.2Assess` and rich text split around the action number. A blank initial Client Step or an action from a different major step still needs correction. Duplicate/skipped agency sub-action numbers are flagged **under Agency Actions**, not under the intentionally blank Client Steps. When the client takes a new action (e.g. **2. Answer the Client Experience Survey Form**), enter a new Client Step.
