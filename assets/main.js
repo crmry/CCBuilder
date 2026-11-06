@@ -402,7 +402,7 @@
 
 		    const reqConfig = {
 		        toolbar: ['bold', 'italic', 'bulletedList', 'numberedList'],
-		        placeholder: 'Document Name (# of copies, original/photocopy) — e.g., Duly accomplished application form (1 original copy), Valid Government-issued ID (1 photocopy)'
+		        placeholder: 'Name of requirement (e.g., Valid ID — 1 photocopy, Job Order Request Form, Requisition and Issuance Slip). Online and standard office forms may be listed without copies.'
 		    };
 
 		    const whereConfig = {
@@ -1619,7 +1619,7 @@
 		                element: '#requirementsTable',
 		                popover: {
 		                    title: 'Checklist of Requirements',
-		                    description: '<strong>ARTA Prescribed Manner of Writing:</strong><br><code>Name of Document (# of copies, original/photocopy)</code><br><em>Example:</em> <code>Duly Accomplished Request Form (1 original copy)</code><br><br>• <strong>Single Copies:</strong> Explicitly state <em>"one (1)"</em> and specify whether <em>original</em> or <em>photocopy</em>.<br>• <strong>Where to Secure:</strong> Name the specific issuing office, desk, or portal (e.g. <em>PSA Serbilis Center / HIMD Receiving Desk</em>).<br>• If none needed: write <strong>"None"</strong> (never leave blank).<br><br>⚠️ <em>CRITICAL:</em> Any requirement demanded from a citizen that is not listed here is an illegal additional requirement under RA 11032!',
+		                    description: '<strong>Checklist of Requirements:</strong><br><br>• <strong>Paper documents:</strong> State how many originals or photocopies are needed (e.g., <code>Valid ID — 1 photocopy</code>).<br>• <strong>Online forms:</strong> Enter the form name, then identify the website or portal under <em>Where to Secure</em>. No paper-copy count is needed unless printed copies are required.<br>• <strong>Standard office forms or slips:</strong> Enter the form name and the issuing office. Copy details are optional unless physical copies are specifically required.<br>• <strong>Where to Secure:</strong> Name the actual issuing office, desk, or online source.<br>• <strong>No requirements:</strong> Enter <code>None</code> in both columns. Do not leave them blank.<br><br>Only listed requirements should be requested from clients.',
 		                    side: 'top',
 		                    align: 'start'
 		                }
