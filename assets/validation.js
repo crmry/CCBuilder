@@ -90,6 +90,26 @@
     return m?Number(m[1]):null;
   }
 
+  // The number and format of copies applies to paper documents, not every
+  // online form or standard office-issued form. "Where to Secure" must still
+  // identify the actual source of either kind of form.
+  const copyDetailsPattern = /\b(?:\d+|one|two|three|four|five)\s*(?:\(\d+\)\s*)?(?:original|photocopy|photocopies|copies|copy)\b/i;
+  const standardFormPattern = /\b(?:form|slip|template|questionnaire|worksheet|logsheet|log\s+sheet)\s*(?:\([^)]*\))?\s*[.:;]?$/i;
+  const digitalSourcePattern = /\b(?:online|electronic|digitally|digital|web[\s-]?portal|portal|e-?form|google\s+forms|microsoft\s+forms|qr[\s-]?code|website|web[\s-]?site|url)\b|https?:\/\/|www\.|(?:[a-z0-9-]+\.)+(?:org|gov|edu|com|net|ph)\b/i;
+  const digitalFormPattern = /\b(?:online|web[\s-]?based|electronic|digital|e-?form)\s+(?:form|application|request|registration|submission)\b/i;
+  const paperCopyPattern = /\b(?:hard[\s-]?copy|physical\s+copy|printed\s+copy|original\s+copy|certified\s+true\s+copy|photocopy|photocopies|copies\s+of|copy\s+of|printed\s+and\s+signed)\b/i;
+
+  function requiresCopyDetails(checklist, whereToSecure) {
+    if (copyDetailsPattern.test(checklist)) return false;
+    if (!whereToSecure) return true; // The Where-to-Secure check is separate.
+    // An explicit paper-copy instruction still requires quantity and copy type.
+    if (paperCopyPattern.test(checklist)) return true;
+    const isStandardForm=standardFormPattern.test(checklist);
+    const isOnlineForm=digitalFormPattern.test(checklist) ||
+      (isStandardForm && digitalSourcePattern.test(whereToSecure));
+    return !(isOnlineForm || isStandardForm);
+  }
+
   function validateCharterData(data) {
     const issues = [];
     const add = (section, label, message, target) => issues.push({ section, label, message, target });
@@ -127,9 +147,11 @@
         const entry = row && typeof row === 'object' ? row : {};
         const checklist = text(entry.checklist), where = text(entry.where);
         if (!checklist)
-          add('Checklist of Requirements', 'Row ' + n + ': Requirement', 'Specify the document and number/type of copies, or “None”.', cell(1));
-        else if (checklist.toLowerCase() !== 'none' && !/\b(?:\d+|one|two|three|four|five)\s*(?:\(\d+\)\s*)?(?:original|photocopy|copies|copy)\b/i.test(checklist))
-          add('Checklist of Requirements', 'Row ' + n + ': Copy details', 'Specify quantity and original/photocopy (example: Valid ID — 1 photocopy).', cell(1));
+          add('Checklist of Requirements', 'Row ' + n + ': Requirement',
+            'Enter the required document or form, or “None” when no requirement applies.', cell(1));
+        else if (checklist.toLowerCase() !== 'none' && requiresCopyDetails(checklist, where))
+          add('Checklist of Requirements', 'Row ' + n + ': Copy details',
+            'For paper documents, specify the number of originals or photocopies (example: Valid ID — 1 photocopy). Online forms and standard office-issued forms do not need copy details unless printed copies are required.', cell(1));
         if (!where)
           add('Checklist of Requirements', 'Row ' + n + ': Where to Secure', 'Specify the issuing office or “None”.', cell(2));
         if (checklist.toLowerCase() === 'none' && where && where.toLowerCase() !== 'none')
