@@ -12,6 +12,16 @@ The Builder's existing functionality remains intact: CKEditor, requirements and 
 
 ## Citizen Charter Readiness Check
 
+### Online and standard-form requirements
+
+Copy counts apply to **paper supporting documents** (e.g., a Valid ID or certificate). The Readiness Check now recognizes a named **online form** or **standard office-issued form, slip, or template** and permits its Checklist entry without a fixed number of originals or photocopies, provided that **Where to Secure** identifies the issuing office, desk, website, or portal. This applies to examples such as **Job Order Request Form** obtained from `forms.clmmrh.org` and **Requisition and Issuance Slip** from the **Materials Management Section**.
+
+An explicit instruction for physical or printed copies still requires their quantity and copy type. Ordinary documentary requirements, such as **Valid ID**, continue to require copy details. A source is always required; recognizing an online or standard form does not waive **Where to Secure**.
+
+These rules check completeness of the entry and are not a substitute for verifying the office's actual procedure or prescribed number of copies. Requirements are not reworded or changed automatically.
+
+
+
 ### Approved plantilla position reference
 
 The **Person Responsible** check uses the **130-title plantilla list supplied for this CCMain project**, embedded in `assets/plantilla-positions.js`. The list is bundled locally and does not contact an external server. The system compares each entered title against the reference using case-insensitive and whitespace-tolerant matching, while preserving the actual position title and grade. It accepts multiple titles followed by the responsible office/section/unit; office names are not compared against the list.
