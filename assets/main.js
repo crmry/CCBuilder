@@ -811,29 +811,170 @@
 		}
 		const exportFormData = saveFormData;
 
-		function importFormData(event) {
-		    const file = event.target.files[0];
-		    if (!file) return;
-
-		    const reader = new FileReader();
-		    reader.onload = function(e) {
-		        try {
-		            const data = JSON.parse(e.target.result);
-		            if (!window.validateCitizenCharterForAction(data, 'open')) {
-		                event.target.value = '';
-		                return;
-		            }
-		            currentOpenedFileName = file.name;
-		            applyFormData(data);
-		            scheduleAutoSave();
-		            event.target.value = '';
-		        } catch (err) {
-		            alert('Error reading JSON file: ' + err.message);
-		        }
+		// Import is intentionally different from final-output validation: a user
+		// must be able to reopen an old/incomplete draft in order to correct it.
+		function normalizeCitizenCharterImport(raw) {
+		    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+		        throw new Error('This is not a Citizen Charter JSON object.');
+		    }
+		    if (!Object.prototype.hasOwnProperty.call(raw, 'requirements') ||
+		        !Object.prototype.hasOwnProperty.call(raw, 'processOverview')) {
+		        throw new Error('This file is missing the requirements or processOverview section of a Citizen Charter backup.');
+		    }
+		    if (!Array.isArray(raw.requirements) || !Array.isArray(raw.processOverview)) {
+		        throw new Error('The requirements and processOverview sections must be lists.');
+		    }
+		    const stringField = (value, path) => {
+		        if (value === undefined || value === null) return '';
+		        if (typeof value !== 'string') throw new Error('Invalid data type in ' + path + ': text is required.');
+		        return value;
 		    };
-		    reader.readAsText(file);
+		    const preferred = (row, primary, legacy, path) =>
+		        stringField(row[primary] !== undefined ? row[primary] : row[legacy], path);
+		    const entries = raw.requirements.map((entry, i) => {
+		        if (!entry || typeof entry !== 'object' || Array.isArray(entry))
+		            throw new Error('Invalid requirements[' + i + ']: expected a row of text fields.');
+		        return {
+		            checklist: preferred(entry, 'checklist', 'requirement', 'requirements[' + i + '].checklist'),
+		            where: preferred(entry, 'where', 'whereToSecure', 'requirements[' + i + '].where')
+		        };
+		    });
+		    const steps = raw.processOverview.map((entry, i) => {
+		        if (!entry || typeof entry !== 'object' || Array.isArray(entry))
+		            throw new Error('Invalid processOverview[' + i + ']: expected a row of text fields.');
+		        const fields = {};
+		        for (const key of ['clientSteps', 'agencyActions', 'feesToBePaid', 'processingTime', 'personResponsible']) {
+		            const legacyKey = {feesToBePaid:'fees', processingTime:'time', personResponsible:'person'}[key] || key;
+		            fields[key] = preferred(entry, key, legacyKey, 'processOverview[' + i + '].' + key);
+		        }
+		        return fields;
+		    });
+		    const types = raw.transaction_type !== undefined ? raw.transaction_type : raw.transactionTypes;
+		    let transactions;
+		    if (Array.isArray(types)) {
+		        if (!types.every(v => typeof v === 'string'))
+		            throw new Error('Invalid transaction_type: every selected type must be text.');
+		        transactions = types;
+		    } else if (typeof types === 'string') {
+		        transactions = types.split(/\s*,\s*/).filter(Boolean);
+		    } else if (types === undefined || types === null) {
+		        transactions = [];
+		    } else {
+		        throw new Error('Invalid transaction_type: expected a list of transaction types.');
+		    }
+		    return {
+		        serviceName: stringField(raw.serviceName, 'serviceName'),
+		        office: stringField(raw.office, 'office'),
+		        description: stringField(raw.description, 'description'),
+		        classification: stringField(raw.classification, 'classification'),
+		        transaction_type: transactions,
+		        who_may_avail: stringField(
+		            raw.who_may_avail !== undefined ? raw.who_may_avail : raw.whoMayAvail, 'who_may_avail'),
+		        feesToBePaid: stringField(
+		            raw.feesToBePaid !== undefined ? raw.feesToBePaid : raw.FeesToBePaid, 'feesToBePaid'),
+		        processingTime: stringField(
+		            raw.processingTime !== undefined ? raw.processingTime : raw.ProcessingTime, 'processingTime'),
+		        requirements: entries,
+		        processOverview: steps
+		    };
 		}
 
+		function importFormData(event) {
+		    const input = event && (event.currentTarget || event.target);
+		    const file = input && input.files && input.files[0];
+		    if (!file) return;
+		    const reportError = (message, rawValue) => {
+		        if (window.ccImportReview && typeof window.ccImportReview.present === 'function') {
+		            window.ccImportReview.present(file.name,
+		                [{section:'File import', label:'Unable to open this JSON file', message, jsonPath:'$'}],
+		                rawValue === undefined ? null : rawValue, false);
+		        } else {
+		            window.alert(message);
+		        }
+		    };
+		    const applyImportedData = (data, needsCorrection) => {
+		        const current = collectCurrentFormData();
+		        if (current && hasSubstantialData(current) &&
+		            !window.confirm('Open ' + file.name + '? This will replace the current form. Continue?')) {
+		            return false;
+		        }
+		        if (typeof window.resetCharterReadiness === 'function') window.resetCharterReadiness();
+		        isRestoringDraft = true;
+		        try {
+		            applyFormData(data);
+		            currentOpenedFileName = file.name;
+		        } catch (err) {
+		            isRestoringDraft = false;
+		            throw err;
+		        }
+		        // CKEditor creates dynamic rows asynchronously. Wait until every
+		        // imported row has been initialized before validating or saving.
+		        const requiredRequirementEditors = Math.max(1, data.requirements.length) * 2;
+		        const requiredStepEditors = Math.max(1, data.processOverview.length) * 5;
+		        let attempts = 0;
+		        const finish = () => {
+		            if (requirementEditors.length >= requiredRequirementEditors &&
+		                processOverviewEditors.length >= requiredStepEditors || ++attempts >= 120) {
+		                isRestoringDraft = false;
+		                scheduleAutoSave();
+		                if (needsCorrection && typeof window.checkCharterReadiness === 'function')
+		                    window.checkCharterReadiness();
+		            } else {
+		                window.setTimeout(finish, 100);
+		            }
+		        };
+		        window.setTimeout(finish, 100);
+		        return true;
+		    };
+		    const reader = new FileReader();
+		    reader.onerror = () => {
+		        reportError('The browser could not read the selected file. Please try opening the JSON file again.');
+		        input.value = '';
+		    };
+		    reader.onload = () => {
+		        try {
+		            const rawText = String(reader.result || '').replace(/^\uFEFF/, '');
+		            let parsed;
+		            try {
+		                parsed = JSON.parse(rawText);
+		            } catch (err) {
+		                const detail = window.ccJsonDiagnostics?.syntaxDetails?.(err, rawText) || err.message;
+		                reportError('Invalid JSON syntax: ' + detail);
+		                return;
+		            }
+		            let data;
+		            try {
+		                data = normalizeCitizenCharterImport(parsed);
+		            } catch (err) {
+		                reportError(err.message, parsed);
+		                return;
+		            }
+		            const issues = typeof window.validateCharterData === 'function'
+		                ? window.validateCharterData(data) : [];
+		            if (issues.length && window.ccImportReview && typeof window.ccImportReview.present === 'function') {
+		                window.ccImportReview.present(file.name, issues, data, true,
+		                    () => applyImportedData(data, true));
+		            } else {
+		                // Fail open for editing (never for final export) if the
+		                // optional diagnostics UI is unavailable.
+		                applyImportedData(data, issues.length > 0);
+		            }
+		        } catch (err) {
+		            console.error('Citizen Charter import error:', err);
+		            isRestoringDraft = false;
+		            reportError('Unable to load this file: ' + (err && err.message ? err.message : 'Unknown error.'));
+		        } finally {
+		            input.value = ''; // Allows choosing the same file again.
+		        }
+		    };
+		    try {
+		        reader.readAsText(file, 'UTF-8');
+		    } catch (err) {
+		        reportError('Unable to access the selected file: ' + err.message);
+		        input.value = '';
+		    }
+		}
+		window.ccMainImportFile = importFormData;
 
 		function getCitizenCharterData() {
 		    const rawTotalFees = totalFeesEditor ? totalFeesEditor.getData() : '';
