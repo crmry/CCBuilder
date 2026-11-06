@@ -41,8 +41,13 @@
     if(officeIndex < 0) return 'office';
     const positions=clauses.slice(0,officeIndex);
     // Older JSON may flatten an entire entry into one line.
-    if(!positions.length && positionWords.test(clauses[officeIndex]) &&
-       officeWords.test(clauses[officeIndex])) return null;
+    if (!positions.length && clauses.length === 1) {
+      const roleMatch=clauses[0].match(positionWords);
+      const officeMatch=clauses[0].match(officeWords);
+      // Accept flattened "Nurse Attendant II IMISS Office", but not a
+      // stand-alone title such as "Service Assistant I".
+      return roleMatch && officeMatch && roleMatch.index < officeMatch.index ? null : 'office';
+    }
     if(!positions.length || positions.some(position=>!positionWords.test(position)))return 'position';
     return null;
   }
