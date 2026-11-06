@@ -390,7 +390,7 @@ assert.deepEqual(threeFixes.map(issue=>issue.fix.to),
   ['Information Systems Analyst III','Information Systems Analyst II','Information Systems Analyst I'],
   'Suggestions must preserve the exact Roman numeral / position grade');
 assert(threeFixes.every(issue=>issue.target.endsWith('td:nth-child(5)')),
-  'Every suggested correction must target the responsible person's field');
+  'Every suggested correction must target the Person Responsible field');
 
 const replaceTitle=sandbox.window.ccReplaceSuggestedPlantillaTitle;
 const originalRoles=mixedAnalysts.processOverview[0].personResponsible;
