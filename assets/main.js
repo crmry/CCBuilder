@@ -476,11 +476,11 @@
 		    };
 
 		    const stepPlaceholders = {
-		        clientSteps: 'Numbered step & location (e.g., 1. Submit complete checklist of requirements and valid ID to Receiving Section)',
+		        clientSteps: 'Numbered client action and location (e.g., 1. Submit request to Receiving Section). Leave blank when Agency Actions continue the same step as 1.2, 1.3, etc.',
 		        agencyActions: 'Numbered action per step (e.g., 1.1 Receive documents, verify completeness against checklist, and issue acknowledgment receipt)',
 		        feesToBePaid: 'Type of Fee: Currency Amount (e.g., Certification Fee: PHP 50.00) or "None" (Ranging is prohibited)',
 		        processingTime: 'Exact duration: # Day/s, # Hour/s, # Minute/s (e.g., 15 minutes or 1 Day, 2 Hours) (Ranging is prohibited)',
-		        personResponsible: 'Designation and Office (e.g., Administrative Officer V, Cashier Section). If rotating, use Immediate Supervisor\'s Designation and Office'
+		        personResponsible: 'Official plantilla title(s) and responsible office (e.g., Nurse Attendant II / Administrative Aide IV, IMISS Office). Multiple titles may appear on separate lines above their office.'
 		    };
 
 		    const fields = [{
@@ -1628,7 +1628,7 @@
 		                element: '#processOverviewTable',
 		                popover: {
 		                    title: 'Client Steps and Agency Actions',
-		                    description: '<strong>ARTA Step-by-Step Flow Rules:</strong><br><br>• <strong>Client Steps:</strong> State what the citizen does and where (e.g., <em>"1. Submit requirements to Receiving Section"</em>). First step must be submission; last step must be claiming result.<br>• <strong>Agency Actions:</strong> Specific action taken by agency staff (e.g., <em>"1.1 Review document completeness"</em>). Use sub-numbering (1.1, 1.2) for multiple agency actions per client step.<br>• <strong>Zero Contact Policy:</strong> Minimize face-to-face interactions strictly to essential ministerial transactions.<br><br>⚠️ <em>Rule:</em> Demanding unlisted steps from clients is strictly prohibited!',
+		                    description: '<strong>ARTA Step-by-Step Flow Rules:</strong><br><br>• <strong>Client Steps:</strong> State what the citizen does and where (e.g., <em>"1. Submit requirements to Receiving Section"</em>). First step must be submission; last step must be claiming result.<br>• <strong>Agency Actions:</strong> Specific action taken by agency staff (e.g., <em>"1.1 Review document completeness"</em>). Use sub-numbering (1.1, 1.2, 1.3) for multiple agency actions per client step. <strong>Leave Client Steps blank on continuation rows</strong> when Agency Actions follow the same numbered sequence; enter a new Client Step only when the client action changes.<br>• <strong>Zero Contact Policy:</strong> Minimize face-to-face interactions strictly to essential ministerial transactions.<br><br>⚠️ <em>Rule:</em> Demanding unlisted steps from clients is strictly prohibited!',
 		                    side: 'top',
 		                    align: 'start'
 		                }
@@ -1637,7 +1637,7 @@
 		                element: '#processOverviewTable tfoot',
 		                popover: {
 		                    title: 'Fees, Processing Time and Responsible Person',
-		                    description: '<strong>ARTA Specification Rules:</strong><br><br>• <strong>Fees:</strong> Type + Currency + Amount (e.g., <code>Certification Fee: PHP 50.00</code>) or <code>None</code>. ⚠️ <em>Ranging (e.g. PHP 50-100) is illegal!</em><br>• <strong>Processing Time:</strong> Exact duration in Days, Hours, Minutes (1 day = 8 working hours). ⚠️ <em>Ranging (e.g. "1-2 hours") is prohibited!</em><br>• <strong>Person Responsible:</strong> Write <strong>Designation and Office</strong> (e.g., <code>Administrative Officer V, Cashier Section</code>). If personnel rotates, use the <em>Immediate Supervisor\'s Designation and Office</em>. ⚠️ <em>Do NOT use personal employee names!</em>',
+		                    description: '<strong>ARTA Specification Rules:</strong><br><br>• <strong>Fees:</strong> Type + Currency + Amount (e.g., <code>Certification Fee: PHP 50.00</code>) or <code>None</code>. ⚠️ <em>Ranging (e.g. PHP 50-100) is illegal!</em><br>• <strong>Processing Time:</strong> Exact duration in Days, Hours, Minutes (1 day = 8 working hours). ⚠️ <em>Ranging (e.g. "1-2 hours") is prohibited!</em><br>• <strong>Person Responsible:</strong> Write the <strong>official plantilla position title(s) and responsible office</strong> (e.g., <code>Nurse Attendant II</code>, <code>Administrative Aide IV</code>, followed by <code>IMISS Office</code>). Multiple position titles may appear on separate lines. If personnel rotates, use the <em>Immediate Supervisor\'s Designation and Office</em>. ⚠️ <em>Do NOT use personal employee names!</em>',
 		                    side: 'top',
 		                    align: 'start'
 		                }
