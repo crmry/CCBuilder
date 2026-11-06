@@ -14,6 +14,52 @@
   // Screening aid, not an authoritative government plantilla directory.
   const positionWords = /\b(officer|nurse|nursing|administrative|aide|assistant|supervisor|chief|head|director|technologist|technician|pharmacist|physician|specialist|registrar|accountant|clerk|engineer|attendant|secretary|therapist|midwife|surgeon|dentist|nutritionist|dietitian|psychologist|social worker|social welfare|information technology|operator|cashier|encoder|statistician|librarian|architect|auditor|analyst|inspector|manager|coordinator|pathologist|radiologist|consultant|medical|health|records|housekeeper|driver|utility worker|janitor)\b/i;
 
+  // Keep CKEditor paragraph and line-break boundaries: one cell can list
+  // several plantilla positions followed by a single responsible office.
+  function editorLines(value) {
+    return String(typeof value === 'string' ? value : '')
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/(?:p|div|li|h[1-6])\s*>/gi, '\n')
+      .replace(/<li\b[^>]*>/gi, '\n')
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/&nbsp;|&#160;/gi, ' ').replace(/&amp;/gi, '&')
+      .split(/\r?\n|;\s*/).map(line => line.replace(/\s+/g,' ').trim()).filter(Boolean);
+  }
+
+  const officeWords = /\b(office|division|department|section|unit|center|centre|bureau|branch|service|facility|ward|desk|secretariat)\b/i;
+  function validateResponsibleCell(value) {
+    const lines = editorLines(value);
+    if (!lines.length) return 'missing';
+    const clauses = lines.flatMap(line =>
+      line.split(/,\s*|\s+[–—-]\s+/).map(part=>part.trim()).filter(Boolean));
+    // Use the final office clause so positions such as "Service Assistant"
+    // don't get mistaken for the name of an agency unit.
+    let officeIndex = -1;
+    for(let i=clauses.length-1;i>=0;i--){
+      if(officeWords.test(clauses[i])) {officeIndex=i;break;}
+    }
+    if(officeIndex < 0) return 'office';
+    const positions=clauses.slice(0,officeIndex);
+    // Older JSON may flatten an entire entry into one line.
+    if(!positions.length && positionWords.test(clauses[officeIndex]) &&
+       officeWords.test(clauses[officeIndex])) return null;
+    if(!positions.length || positions.some(position=>!positionWords.test(position)))return 'position';
+    return null;
+  }
+
+  function numberedAgencyActions(value) {
+    const parsed=[];
+    for(const line of editorLines(value)){
+      const m=line.match(/^(?:[-•]\s*)?(\d+)\.(\d+)(?=\s|[):.-]|$)/);
+      if(m)parsed.push({major:Number(m[1]),minor:Number(m[2])});
+    }
+    return parsed;
+  }
+  function numberedClientStep(value) {
+    const m=text(value).match(/^(\d+)\s*[.)]\s*/);
+    return m?Number(m[1]):null;
+  }
+
   function validateCharterData(data) {
     const issues = [];
     const add = (section, label, message, target) => issues.push({ section, label, message, target });
@@ -64,15 +110,39 @@
     if (!Array.isArray(data.processOverview) || !data.processOverview.length) {
       add('Process Overview', 'Process Steps', 'Add at least one complete process step.', '#processOverviewTable');
     } else {
+      let activeClientStep = null;
+      let lastAgencyAction = null;
       data.processOverview.forEach((row, index) => {
         const n = index + 1;
         const target = '#processOverviewTableBody tr:nth-child(' + n + ')';
         const cell = column => target + ' td:nth-child(' + column + ')';
         const entry = row && typeof row === 'object' ? row : {};
-        if (!filled(entry.clientSteps))
-          add('Process Overview', 'Step ' + n + ': Client Steps', 'Describe what the client does and where.', cell(1));
-        if (!filled(entry.agencyActions))
-          add('Process Overview', 'Step ' + n + ': Agency Actions', 'Describe the action of agency personnel.', cell(2));
+        const actionNumbers = numberedAgencyActions(entry.agencyActions);
+        const firstAction = actionNumbers[0] || null;
+        const lastAction = actionNumbers[actionNumbers.length-1] || null;
+        const hasClientStep = filled(entry.clientSteps);
+        if (hasClientStep) {
+          const explicitNumber = numberedClientStep(entry.clientSteps);
+          activeClientStep = explicitNumber !== null ? explicitNumber :
+            (firstAction ? firstAction.major : null);
+        } else {
+          // The continuation row intentionally leaves Client Steps empty.
+          // Agency Actions must continue the previous 1.1, 1.2, 1.3...
+          const continued = index > 0 && activeClientStep !== null &&
+            firstAction && lastAgencyAction &&
+            firstAction.major === activeClientStep &&
+            firstAction.major === lastAgencyAction.major &&
+            firstAction.minor === lastAgencyAction.minor+1;
+          if (!continued) {
+            add('Process Overview','Step '+n+': Client Steps',
+              'Enter a client step, or leave it blank only when Agency Actions continue the prior step (for example 1.1, 1.2, 1.3).',cell(1));
+          }
+        }
+        if (!filled(entry.agencyActions)) {
+          add('Process Overview','Step '+n+': Agency Actions',
+            'Describe the action of agency personnel.',cell(2));
+        }
+        lastAgencyAction = lastAction;
 
         const fee = text(entry.feesToBePaid);
         if (!fee)
@@ -94,15 +164,16 @@
         else if (!timeUnits.test(time) || numericRange.test(time) || /\b(varies|depending|tbd|n\/a)\b/i.test(time))
           add('Process Overview', 'Step ' + n + ': Processing Time', 'Use a fixed number of days, hours or minutes, not a range or “varies”.', cell(4));
 
-        const person = text(entry.personResponsible);
-        if (!person)
-          add('Process Overview', 'Step ' + n + ': Person Responsible', 'Enter the official plantilla position and office, not an employee name.', cell(5));
-        else {
-          const parts = person.split(/,\s*|;\s*|\s+[–—-]\s+/).filter(Boolean);
-          if (parts.length < 2 || !parts[0].trim() || !parts.slice(1).join(' ').trim())
-            add('Process Overview', 'Step ' + n + ': Person Responsible', 'Provide the plantilla designation AND office (for example Administrative Officer V, Cashier Section).', cell(5));
-          if (!positionWords.test(parts[0] || ''))
-            add('Process Overview', 'Step ' + n + ': Person Responsible', 'Use an official position title instead of a personal name; verify against the approved plantilla.', cell(5));
+        const responsibleIssue=validateResponsibleCell(entry.personResponsible);
+        if(responsibleIssue==='missing'){
+          add('Process Overview','Step '+n+': Person Responsible',
+            'Enter the official plantilla position title(s) and responsible office.',cell(5));
+        }else if(responsibleIssue==='office'){
+          add('Process Overview','Step '+n+': Person Responsible',
+            'Add the responsible office, section, or unit alongside the plantilla position title(s).',cell(5));
+        }else if(responsibleIssue==='position'){
+          add('Process Overview','Step '+n+': Person Responsible',
+            'Use official plantilla position titles, not employee names. Multiple titles can appear on separate lines above their office.',cell(5));
         }
       });
     }
