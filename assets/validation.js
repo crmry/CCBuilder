@@ -97,7 +97,7 @@
   const standardFormPattern = /\b(?:form|slip|template|questionnaire|worksheet|logsheet|log\s+sheet)\s*(?:\([^)]*\))?\s*[.:;]?$/i;
   const digitalSourcePattern = /\b(?:online|electronic|digitally|digital|web[\s-]?portal|portal|e-?form|google\s+forms|microsoft\s+forms|qr[\s-]?code|website|web[\s-]?site|url)\b|https?:\/\/|www\.|(?:[a-z0-9-]+\.)+(?:org|gov|edu|com|net|ph)\b/i;
   const digitalFormPattern = /\b(?:online|web[\s-]?based|electronic|digital|e-?form)\s+(?:form|application|request|registration|submission)\b/i;
-  const paperCopyPattern = /\b(?:hard[\s-]?copy|physical\s+copy|printed\s+copy|original\s+copy|certified\s+true\s+copy|photocopy|photocopies|copies\s+of|copy\s+of|printed\s+and\s+signed)\b/i;
+  const paperCopyPattern = /\b(?:hard[\s-]?copy|physical\s+copy|printed\s+(?:application\s+)?(?:copy|form)|original\s+copy|certified\s+true\s+copy|photocopy|photocopies|copies\s+of|copy\s+of|printed\s+and\s+signed)\b/i;
 
   function requiresCopyDetails(checklist, whereToSecure) {
     if (copyDetailsPattern.test(checklist)) return false;
