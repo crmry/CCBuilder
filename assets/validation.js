@@ -25,7 +25,7 @@
 
     [
       ['serviceName', 'Service Name', '#serviceNameInput'],
-      ['description', 'Description', '#editor'],
+      ['description', 'Description', '#description-tour-target'],
       ['office', 'Office or Division', '[name="office"]'],
       ['who_may_avail', 'Who May Avail', '[name="who_may_avail"]']
     ].forEach(([field, label, target]) => {
@@ -47,16 +47,17 @@
       data.requirements.forEach((row, index) => {
         const n = index + 1;
         const target = '#requirementsTableBody tr:nth-child(' + n + ')';
+        const cell = column => target + ' td:nth-child(' + column + ')';
         const entry = row && typeof row === 'object' ? row : {};
         const checklist = text(entry.checklist), where = text(entry.where);
         if (!checklist)
-          add('Checklist of Requirements', 'Row ' + n + ': Requirement', 'Specify the document and number/type of copies, or “None”.', target);
+          add('Checklist of Requirements', 'Row ' + n + ': Requirement', 'Specify the document and number/type of copies, or “None”.', cell(1));
         else if (checklist.toLowerCase() !== 'none' && !/\b(?:\d+|one|two|three|four|five)\s*(?:\(\d+\)\s*)?(?:original|photocopy|copies|copy)\b/i.test(checklist))
-          add('Checklist of Requirements', 'Row ' + n + ': Copy details', 'Specify quantity and original/photocopy (example: Valid ID — 1 photocopy).', target);
+          add('Checklist of Requirements', 'Row ' + n + ': Copy details', 'Specify quantity and original/photocopy (example: Valid ID — 1 photocopy).', cell(1));
         if (!where)
-          add('Checklist of Requirements', 'Row ' + n + ': Where to Secure', 'Specify the issuing office or “None”.', target);
+          add('Checklist of Requirements', 'Row ' + n + ': Where to Secure', 'Specify the issuing office or “None”.', cell(2));
         if (checklist.toLowerCase() === 'none' && where && where.toLowerCase() !== 'none')
-          add('Checklist of Requirements', 'Row ' + n + ': Where to Secure', 'If no requirements exist, enter “None” in both columns.', target);
+          add('Checklist of Requirements', 'Row ' + n + ': Where to Secure', 'If no requirements exist, enter “None” in both columns.', cell(2));
       });
     }
 
@@ -66,41 +67,42 @@
       data.processOverview.forEach((row, index) => {
         const n = index + 1;
         const target = '#processOverviewTableBody tr:nth-child(' + n + ')';
+        const cell = column => target + ' td:nth-child(' + column + ')';
         const entry = row && typeof row === 'object' ? row : {};
         if (!filled(entry.clientSteps))
-          add('Process Overview', 'Step ' + n + ': Client Steps', 'Describe what the client does and where.', target);
+          add('Process Overview', 'Step ' + n + ': Client Steps', 'Describe what the client does and where.', cell(1));
         if (!filled(entry.agencyActions))
-          add('Process Overview', 'Step ' + n + ': Agency Actions', 'Describe the action of agency personnel.', target);
+          add('Process Overview', 'Step ' + n + ': Agency Actions', 'Describe the action of agency personnel.', cell(2));
 
         const fee = text(entry.feesToBePaid);
         if (!fee)
-          add('Process Overview', 'Step ' + n + ': Fees', 'Enter the prescribed fee and PHP amount, or explicitly type “None”.', target);
+          add('Process Overview', 'Step ' + n + ': Fees', 'Enter the prescribed fee and PHP amount, or explicitly type “None”.', cell(3));
         else if (/^(?:no fee|n\/a|nil|free)$/i.test(fee))
-          add('Process Overview', 'Step ' + n + ': Fees', 'Use the exact word “None” for a service without a fee.', target);
+          add('Process Overview', 'Step ' + n + ': Fees', 'Use the exact word “None” for a service without a fee.', cell(3));
         else if (fee.toLowerCase() !== 'none') {
           if (!feeAmount.test(fee))
-            add('Process Overview', 'Step ' + n + ': Fees', 'Provide a fee type and exact PHP amount, for example Certification Fee: PHP 50.00.', target);
+            add('Process Overview', 'Step ' + n + ': Fees', 'Provide a fee type and exact PHP amount, for example Certification Fee: PHP 50.00.', cell(3));
           if (numericRange.test(fee))
-            add('Process Overview', 'Step ' + n + ': Fees', 'Fee ranges are not accepted. State the exact amount.', target);
+            add('Process Overview', 'Step ' + n + ': Fees', 'Fee ranges are not accepted. State the exact amount.', cell(3));
           if (feeAmount.test(fee) && !fee.replace(feeAmount, '').replace(/[\s:;(),.-]/g, '').trim())
-            add('Process Overview', 'Step ' + n + ': Fees', 'State the name/purpose of the fee as well as its amount.', target);
+            add('Process Overview', 'Step ' + n + ': Fees', 'State the name/purpose of the fee as well as its amount.', cell(3));
         }
 
         const time = text(entry.processingTime);
         if (!time)
-          add('Process Overview', 'Step ' + n + ': Processing Time', 'Enter an exact duration (for example 15 minutes).', target);
+          add('Process Overview', 'Step ' + n + ': Processing Time', 'Enter an exact duration (for example 15 minutes).', cell(4));
         else if (!timeUnits.test(time) || numericRange.test(time) || /\b(varies|depending|tbd|n\/a)\b/i.test(time))
-          add('Process Overview', 'Step ' + n + ': Processing Time', 'Use a fixed number of days, hours or minutes, not a range or “varies”.', target);
+          add('Process Overview', 'Step ' + n + ': Processing Time', 'Use a fixed number of days, hours or minutes, not a range or “varies”.', cell(4));
 
         const person = text(entry.personResponsible);
         if (!person)
-          add('Process Overview', 'Step ' + n + ': Person Responsible', 'Enter the official plantilla position and office, not an employee name.', target);
+          add('Process Overview', 'Step ' + n + ': Person Responsible', 'Enter the official plantilla position and office, not an employee name.', cell(5));
         else {
           const parts = person.split(/,\s*|;\s*|\s+[–—-]\s+/).filter(Boolean);
           if (parts.length < 2 || !parts[0].trim() || !parts.slice(1).join(' ').trim())
-            add('Process Overview', 'Step ' + n + ': Person Responsible', 'Provide the plantilla designation AND office (for example Administrative Officer V, Cashier Section).', target);
+            add('Process Overview', 'Step ' + n + ': Person Responsible', 'Provide the plantilla designation AND office (for example Administrative Officer V, Cashier Section).', cell(5));
           if (!positionWords.test(parts[0] || ''))
-            add('Process Overview', 'Step ' + n + ': Person Responsible', 'Use an official position title instead of a personal name; verify against the approved plantilla.', target);
+            add('Process Overview', 'Step ' + n + ': Person Responsible', 'Use an official position title instead of a personal name; verify against the approved plantilla.', cell(5));
         }
       });
     }
@@ -151,7 +153,16 @@
     .cc-ready-footer { border-top:1px solid #e5eaf0; padding:13px 24px; display:flex; justify-content:space-between; align-items:center; gap:12px; }
     .cc-ready-footer small { color:#778498; font-size:12px; }
     .cc-ready-close { background:#243b5a; color:#fff; border:0; padding:9px 20px; border-radius:7px; font-size:13px; font-weight:650; cursor:pointer; }
-    .cc-ready-highlight { outline:2px solid #2563eb !important; outline-offset:4px; transition:outline-color .3s; }
+    .cc-ready-invalid { outline:2px solid #dc6c60 !important; outline-offset:-2px; border-radius:4px; background:rgba(220,108,96,.04) !important; }
+    .cc-ready-highlight { outline:3px solid #2563eb !important; outline-offset:3px; box-shadow:0 0 0 6px rgba(37,99,235,.15) !important; transition:box-shadow .2s; }
+    .cc-ready-inline-error { margin:7px 0 4px; border-left:3px solid #cc6155; padding:5px 8px; background:#fff7f5; border-radius:0 5px 5px 0; color:#86483e; font-size:12px; line-height:1.45; }
+    .cc-ready-inline-error strong { font-weight:700; display:block; color:#983e35; margin-bottom:2px; }
+    .cc-ready-inline-error span { display:block; }
+    .cc-ready-inline-error .cc-ready-inline-extra { margin-top:3px; }
+    #cc-ready-review-link[hidden] { display:none !important; }
+    #cc-ready-review-link { position:fixed; bottom:20px; right:20px; z-index:1050; border:1px solid #e0b1a9; box-shadow:0 5px 18px rgba(15,23,42,.12); background:#fff; color:#92483f; border-radius:9px; padding:10px 14px; font-size:13px; font-weight:700; cursor:pointer; }
+    #cc-ready-review-link:hover { border-color:#b6574c; background:#fff9f7; }
+    @media(max-width:600px) { #cc-ready-review-link { bottom:12px; right:12px; font-size:12px; padding:9px 11px; } }
     @media(max-width:600px) { .cc-ready-head,.cc-ready-body {padding-left:16px;padding-right:16px;} .cc-ready-footer {padding:12px 16px;} .cc-ready-issue {align-items:flex-start;flex-direction:column;gap:8px;} }
   `;
   const style = document.createElement('style');
@@ -173,12 +184,103 @@
     ' <button class="cc-ready-close" type="button">Close</button></div></div>';
   document.body.appendChild(modal);
 
+  const reviewButton = document.createElement('button');
+  reviewButton.type = 'button';
+  reviewButton.id = 'cc-ready-review-link';
+  reviewButton.hidden = true;
+  reviewButton.setAttribute('aria-label', 'Review remaining Citizen Charter readiness issues');
+  reviewButton.addEventListener('click', () => window.checkCharterReadiness());
+  document.body.appendChild(reviewButton);
+
   let previousFocus = null;
   const close = () => {
     modal.hidden = true;
     document.body.style.overflow = '';
     if (previousFocus && previousFocus.isConnected) previousFocus.focus();
   };
+  // Resolve a validator location to the actual visible form control. CKEditor
+  // hides the original div and renders a separate editable inside its container.
+  function findField(selector) {
+    if (!selector) return null;
+    let source;
+    try { source = document.querySelector(selector); } catch (_) { return null; }
+    if (!source) return null;
+
+    let marker = source;
+    if (source.matches('input[type="radio"], input[type="checkbox"]')) {
+      marker = source.closest('.option-grid') || source.closest('td') || source.parentElement;
+    } else if (source.id === 'FeesToBePaid' || source.id === 'ProcessingTime' || source.id === 'editor') {
+      marker = source.closest('td') || source.closest('#description-tour-target') || source.parentElement;
+    }
+    if (!marker) marker = source;
+    const editable = marker.querySelector('.ck-editor__editable[contenteditable="true"], .ck-editor__editable, [contenteditable="true"]');
+    const focusable = editable ||
+      (source.matches('input, textarea, select, [contenteditable="true"]') ? source : marker.querySelector('input:not([type="hidden"]), textarea, select, button'));
+    return { marker, focusable };
+  }
+
+  function clearFieldMarkers() {
+    document.querySelectorAll('.cc-ready-inline-error').forEach(node => node.remove());
+    document.querySelectorAll('.cc-ready-invalid').forEach(node => node.classList.remove('cc-ready-invalid'));
+    document.querySelectorAll('[data-cc-ready-invalid]').forEach(node => {
+      node.removeAttribute('aria-invalid');
+      node.removeAttribute('data-cc-ready-invalid');
+    });
+  }
+
+  function markFields(issues) {
+    clearFieldMarkers();
+    reviewButton.hidden = issues.length === 0;
+    reviewButton.textContent = issues.length + (issues.length === 1 ? ' issue · Review' : ' issues · Review');
+    const groups = new Map();
+    issues.forEach(issue => {
+      if (!issue.target) return;
+      if (!groups.has(issue.target)) groups.set(issue.target, []);
+      groups.get(issue.target).push(issue);
+    });
+    groups.forEach((problems, selector) => {
+      const field = findField(selector);
+      if (!field) return;
+      const { marker, focusable } = field;
+      marker.classList.add('cc-ready-invalid');
+      if (focusable) {
+        focusable.setAttribute('aria-invalid', 'true');
+        focusable.setAttribute('data-cc-ready-invalid', 'true');
+      }
+      const note = document.createElement('div');
+      note.className = 'cc-ready-inline-error';
+      const heading = document.createElement('strong');
+      heading.textContent = problems[0].label + ' — needs correction';
+      note.appendChild(heading);
+      problems.forEach((problem, i) => {
+        const detail = document.createElement('span');
+        if (i > 0) detail.className = 'cc-ready-inline-extra';
+        detail.textContent = problem.message;
+        note.appendChild(detail);
+      });
+      // Tables need a sibling rather than inserting arbitrary children into a table.
+      if (marker.tagName === 'TABLE' || marker.matches('.option-grid, #description-tour-target') || marker.matches('input, textarea, select')) {
+        marker.insertAdjacentElement('afterend', note);
+      } else {
+        marker.appendChild(note);
+      }
+    });
+  }
+
+  function goToIssue(issue) {
+    const field = findField(issue.target);
+    if (!field) return false;
+    close();
+    // Scroll the visible CKEditor wrapper / table cell rather than the hidden source div.
+    field.marker.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    field.marker.classList.add('cc-ready-highlight');
+    if (field.focusable && typeof field.focusable.focus === 'function') {
+      field.focusable.focus({ preventScroll: true });
+    }
+    window.setTimeout(() => field.marker.classList.remove('cc-ready-highlight'), 2600);
+    return true;
+  }
+
   modal.querySelector('.cc-ready-close').addEventListener('click', close);
   modal.addEventListener('click', e => { if (e.target === modal) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modal.hidden) close(); });
@@ -200,6 +302,7 @@
       : 'No missing required entries found';
     const body = modal.querySelector('#cc-ready-issues');
     body.replaceChildren();
+    if (!isImport) markFields(issues);
 
     if (!blocked) {
       const ok = document.createElement('p');
@@ -229,17 +332,7 @@
             jump.type = 'button';
             jump.className = 'cc-ready-go';
             jump.textContent = 'Go to field';
-            jump.addEventListener('click', () => {
-              close();
-              const target = document.querySelector(issue.target);
-              if (target) {
-                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                target.classList.add('cc-ready-highlight');
-                setTimeout(() => target.classList.remove('cc-ready-highlight'), 2400);
-                const input = target.matches('input,textarea') ? target : target.querySelector('.ck-editor__editable, textarea, input');
-                if (input) input.focus({ preventScroll: true });
-              }
-            });
+            jump.addEventListener('click', () => goToIssue(issue));
             item.appendChild(jump);
           }
           group.appendChild(item);
@@ -252,6 +345,18 @@
     modal.querySelector('.cc-ready-close').focus();
   }
 
+  let annotationsShown = false;
+  let annotationTimer = null;
+  window.refreshCitizenCharterReadiness = function () {
+    if (!annotationsShown || !modal.hidden || typeof collectCurrentFormData !== 'function') return;
+    window.clearTimeout(annotationTimer);
+    annotationTimer = window.setTimeout(() => {
+      if (!modal.hidden) return;
+      const data = collectCurrentFormData();
+      if (data) markFields(validateCharterData(data));
+    }, 300);
+  };
+
   window.validateCitizenCharterForAction = function (data, action) {
     const issues = validateCharterData(data);
     if (action !== 'open' && data) {
@@ -262,11 +367,19 @@
       if (stepCount > (Array.isArray(data.processOverview) ? data.processOverview.length : 0))
         issues.unshift({section:'Editor',label:'Process steps still loading',message:'Allow the process editors to finish loading and try again.',target:'#processOverviewTable'});
     }
+    if (action !== 'open') annotationsShown = true;
     if (issues.length || action === 'check') showIssues(issues, action);
+    else if (action !== 'open') markFields([]);
     return issues.length === 0;
   };
   window.checkCharterReadiness = function () {
     if (typeof collectCurrentFormData === 'function')
       window.validateCitizenCharterForAction(collectCurrentFormData(), 'check');
+  };
+  window.resetCharterReadiness = function () {
+    annotationsShown = false;
+    window.clearTimeout(annotationTimer);
+    clearFieldMarkers();
+    reviewButton.hidden = true;
   };
 })();

@@ -64,3 +64,49 @@ noReq.requirements = [{checklist:'None',where:'None'}];
 assert.equal(validate(noReq).length, 0, 'Explicitly no requirements should pass');
 
 console.log('Citizen Charter readiness validation: 14 checks passed.');
+
+// The correction navigator must point at exact columns, not a whole process row.
+const wrongPosition = copy();
+wrongPosition.processOverview[0].personResponsible = 'Juan Dela Cruz';
+const positionIssue = validate(wrongPosition).find(issue => issue.label.includes('Person Responsible'));
+assert.equal(positionIssue.target, '#processOverviewTableBody tr:nth-child(1) td:nth-child(5)');
+
+const wrongFee = copy();
+wrongFee.processOverview[0].feesToBePaid = '';
+const feeIssue = validate(wrongFee).find(issue => issue.label.includes('Step 1: Fees'));
+assert.equal(feeIssue.target, '#processOverviewTableBody tr:nth-child(1) td:nth-child(3)');
+
+const wrongTime = copy();
+wrongTime.processOverview[0].processingTime = '';
+const timeIssue = validate(wrongTime).find(issue => issue.label.includes('Step 1: Processing Time'));
+assert.equal(timeIssue.target, '#processOverviewTableBody tr:nth-child(1) td:nth-child(4)');
+
+const missingWhere = copy();
+missingWhere.requirements[0].where = '';
+const whereIssue = validate(missingWhere).find(issue => issue.label.includes('Where to Secure'));
+assert.equal(whereIssue.target, '#requirementsTableBody tr:nth-child(1) td:nth-child(2)');
+
+const missingDocument = copy();
+missingDocument.requirements[0].checklist = '';
+const requirementIssue = validate(missingDocument).find(issue => issue.label.includes('Row 1: Requirement'));
+assert.equal(requirementIssue.target, '#requirementsTableBody tr:nth-child(1) td:nth-child(1)');
+
+const stepTwo = copy();
+stepTwo.processOverview.push({...stepTwo.processOverview[0], personResponsible: ''});
+const stepTwoIssue = validate(stepTwo).find(issue => issue.label.includes('Step 2: Person Responsible'));
+assert.equal(stepTwoIssue.target, '#processOverviewTableBody tr:nth-child(2) td:nth-child(5)');
+
+const missingDescription = copy();
+missingDescription.description = '';
+const descriptionIssue = validate(missingDescription).find(issue => issue.label === 'Description');
+assert.equal(descriptionIssue.target, '#description-tour-target');
+
+// No exact field may be inferred from a different row's index.
+const multipleErrors = copy();
+multipleErrors.processOverview[0].feesToBePaid = '';
+multipleErrors.processOverview[0].personResponsible = '';
+assert(validate(multipleErrors).some(issue => issue.target.endsWith('td:nth-child(3)')));
+assert(validate(multipleErrors).some(issue => issue.target.endsWith('td:nth-child(5)')));
+
+console.log('Precise readiness field navigation: 8 checks passed.');
+

@@ -109,6 +109,7 @@
 
 		function scheduleAutoSave() {
 		    if (isRestoringDraft) return;
+		    if (typeof window.refreshCitizenCharterReadiness === 'function') window.refreshCitizenCharterReadiness();
 		    updateAutoSaveStatus('saving');
 		    if (autoSaveTimer) clearTimeout(autoSaveTimer);
 		    autoSaveTimer = setTimeout(() => {
@@ -580,6 +581,7 @@
 		}
 
 		function clearForm() {
+		    if (typeof window.resetCharterReadiness === 'function') window.resetCharterReadiness();
 		    try {
 		        sessionStorage.removeItem(DRAFT_CACHE_KEY);
 		        localStorage.removeItem(DRAFT_CACHE_KEY);
@@ -627,6 +629,7 @@
 		    if (importInput) importInput.value = '';
 
 		    updateAutoSaveStatus('cleared');
+		    if (typeof window.refreshCitizenCharterReadiness === 'function') window.refreshCitizenCharterReadiness();
 		}
 
 		function collectCurrentFormData() {
@@ -1502,7 +1505,7 @@
 		                element: '.actions-panel',
 		                popover: {
 		                    title: 'Readiness Check, Preview and Save',
-		                    description: '• <strong>Check Readiness:</strong> Lists incomplete or nonstandard entries and directs you to the affected section.<br>• <strong>Preview / Save as PDF:</strong> Opens the official printable report preview. Select <em>"Save as PDF"</em> in your printer dialog for crisp vector output or print directly to paper.<br>• <strong>Save:</strong> Exports a standard <code>.json</code> data backup for recordkeeping and mandatory annual updates (required by March 31 annually).<br>• <strong>Open:</strong> Loads an existing <code>.json</code> file to modify or review.<br>• <strong>Clear Form:</strong> Resets fields to draft a new charter.',
+		                    description: '• <strong>Check Readiness:</strong> Locates each missing or nonstandard entry, highlights the exact field, and lets you go directly to that field to correct it.<br>• <strong>Preview / Save as PDF:</strong> Opens the official printable report preview. Select <em>"Save as PDF"</em> in your printer dialog for crisp vector output or print directly to paper.<br>• <strong>Save:</strong> Exports a standard <code>.json</code> data backup for recordkeeping and mandatory annual updates (required by March 31 annually).<br>• <strong>Open:</strong> Loads an existing <code>.json</code> file to modify or review.<br>• <strong>Clear Form:</strong> Resets fields to draft a new charter.',
 		                    side: 'top',
 		                    align: 'center'
 		                }

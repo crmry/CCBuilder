@@ -12,7 +12,7 @@ The Builder's existing functionality remains intact: CKEditor, requirements and 
 
 ## Citizen Charter Readiness Check
 
-The Builder has a **Check Readiness** action. **Save** (JSON) and **Preview / Save as PDF** run the same check before producing any final output. **Open** rejects malformed, unrelated, or incomplete JSON files without replacing the current form. A correction dialog lists each issue by section, with a **Go to field** action for the current form.
+The Builder has a **Check Readiness** action. Each issue identifies its **exact input or table cell**, with a **Go to field** button that scrolls to and focuses the visible editor. Invalid fields are highlighted, with correction text beside the actual entry. A compact **Review issues** control remains accessible while errors exist and disappears after correction. **Save** (JSON) and **Preview / Save as PDF** run the same check before producing any final output. **Open** rejects malformed, unrelated, or incomplete JSON files without replacing the current form. A correction dialog lists each issue by section, with a **Go to field** action for the current form.
 
 Checked items include service details, classification, transaction type, eligibility, requirement documents and copy details (or explicit **None**), process-step actions, fees and processing time, responsible-person designation and office, and totals. For a free service enter **None** in each applicable Fees cell **and** Total Fees. A blank fee is not silently treated as free.
 
