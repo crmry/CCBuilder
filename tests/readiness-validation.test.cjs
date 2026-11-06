@@ -253,3 +253,63 @@ assert(validate(officeOnly).some(x=>x.label.includes('Person Responsible')),
   'Office-only fields must not pass');
 
 console.log('Plantilla position reference: 12 cases passed.');
+
+
+// Standard forms / online forms do not require physical-copy counts unless
+// the requirement explicitly calls for printed copies.
+const screenshotRequirements=copy();
+screenshotRequirements.requirements=[
+  {checklist:'<p>1. Job Order Request Form</p>',where:'<p>IMISS Job Order Request Form from forms.clmmrh.org</p>'},
+  {checklist:'<p>2. For Deployment of ICT Equipment – Requisition and Issuance Slip</p>',where:'<p>Materials Management Section</p>'}
+];
+assert.equal(validate(screenshotRequirements).length,0,
+  'Named online form and office-issued standard slip should pass without copies');
+
+const onlineRequest=copy();
+onlineRequest.requirements=[{checklist:'Online request for technical assistance',where:'IMISS Office — Online Portal'}];
+assert.equal(validate(onlineRequest).length,0,
+  'Explicitly online requests with an identified portal do not need physical copies');
+
+const genericForm=copy();
+genericForm.requirements=[{checklist:'Job Order Request Form',where:'IMISS Receiving Desk'}];
+assert.equal(validate(genericForm).length,0,'Named standard forms obtained at an office do not need copy counts');
+
+const genericSlip=copy();
+genericSlip.requirements=[{checklist:'Requisition and Issuance Slip',where:'Materials Management Section'}];
+assert.equal(validate(genericSlip).length,0,'Office-issued standard slips do not need copy counts');
+
+const missingFormSource=copy();
+missingFormSource.requirements=[{checklist:'Job Order Request Form',where:''}];
+assert(validate(missingFormSource).some(issue=>issue.label.includes('Where to Secure')),
+  'An otherwise valid standard form still needs a source');
+
+const physicalId=copy();
+physicalId.requirements=[{checklist:'Valid Government-Issued ID',where:'Client'}];
+assert(validate(physicalId).some(issue=>issue.label.includes('Copy details')),
+  'A paper identification document still requires copy details');
+
+const physicalIdComplete=copy();
+physicalIdComplete.requirements=[{checklist:'Valid ID (1 photocopy)',where:'Client'}];
+assert.equal(validate(physicalIdComplete).length,0,'Properly specified copies still pass');
+
+const printedForm=copy();
+printedForm.requirements=[{checklist:'Printed Application Form',where:'Receiving Section'}];
+assert(validate(printedForm).some(issue=>issue.label.includes('Copy details')),
+  'Explicitly printed forms should still have copy details');
+
+const paperCopyOfForm=copy();
+paperCopyOfForm.requirements=[{checklist:'Copy of Job Order Request Form',where:'IMISS Office'}];
+assert(validate(paperCopyOfForm).some(issue=>issue.label.includes('Copy details')),
+  'Explicit physical copies must carry quantities even if the document is a form');
+
+const numberedSupportingForm=copy();
+numberedSupportingForm.requirements=[{checklist:'Form 137',where:'School Registrar'}];
+assert(validate(numberedSupportingForm).some(issue=>issue.label.includes('Copy details')),
+  'Numbered supporting documents are not assumed to be generic blank forms');
+
+const ordinaryCertificate=copy();
+ordinaryCertificate.requirements=[{checklist:'Birth Certificate',where:'PSA Office'}];
+assert(validate(ordinaryCertificate).some(issue=>issue.label.includes('Copy details')),
+  'Traditional documentary requirements still need copy details');
+
+console.log('Online and standard-form copy validation: 11 cases passed.');
