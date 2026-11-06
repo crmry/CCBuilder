@@ -159,9 +159,10 @@
       const expectedSteps=Math.max(1,data.processOverview.length);
       let attempts=0;
       const inspect=()=>{
-        const snapshot=collectCurrentFormData();
-        if((snapshot&&snapshot.requirements.length>=expectedRequirements&&
-            snapshot.processOverview.length>=expectedSteps)||++attempts>=80){
+        const expectedReqEditors=expectedRequirements*2;
+        const expectedStepEditors=expectedSteps*5;
+        if((requirementEditors.length>=expectedReqEditors &&
+            processOverviewEditors.length>=expectedStepEditors)||++attempts>=200){
           window.checkCharterReadiness();
         }else window.setTimeout(inspect,100);
       };
