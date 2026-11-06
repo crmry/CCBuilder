@@ -153,11 +153,15 @@ Warehouseman III`.split('\n').map(s=>s.trim()).filter(Boolean));
     const query=normalize(value);
     if(!query||byName.has(query))return null;
     const suffix=query.match(/\b(?:i|ii|iii|iv|v|vi|vii|viii|ix|x)(?:\s+\(pt\))?$/);
+    // Position grades are meaningful. Never suggest a different level just
+    // because only a Roman numeral differs from what the user entered.
     const matches=titles.map(title=>{
       const canonical=normalize(title);
-      const score=1-distance(query,canonical)/Math.max(query.length,canonical.length);
       const rank=canonical.match(/\b(?:i|ii|iii|iv|v|vi|vii|viii|ix|x)(?:\s+\(pt\))?$/);
-      return {title, score:score+(suffix&&rank&&suffix[0]===rank[0]?0.04:0)};
+      if((suffix&&rank&&suffix[0]!==rank[0]) ||
+         (suffix&&!rank) || (!suffix&&rank))return {title,score:-1};
+      const score=1-distance(query,canonical)/Math.max(query.length,canonical.length);
+      return {title,score};
     }).sort((a,b)=>b.score-a.score);
     return matches[0]&&matches[0].score>=0.72?matches[0].title:null;
   }
