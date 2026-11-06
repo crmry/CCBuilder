@@ -72,10 +72,33 @@
     const invalid=positions.filter(title=>!reference.match(title));
     if(invalid.length){
       const invalidTitle=invalid[0];
-      return {kind:'position',title:invalidTitle,suggestion:reference.closest(invalidTitle)};
+      return {
+        kind:'position',title:invalidTitle,suggestion:reference.closest(invalidTitle),
+        invalidTitles:invalid.map(title=>({title,suggestion:reference.closest(title)}))
+      };
     }
     return null;
   }
+
+  // Changes text only; HTML tags, other titles and the office are unchanged.
+  function replaceSuggestedPlantillaTitle(html, previous, suggested) {
+    const input=String(typeof html==='string'?html:'');
+    const reference=window.CCPlantillaPositions;
+    if(!previous || !suggested || !reference || !reference.match(suggested))
+      return {html:input,changed:false};
+    const escaped=previous.replace(/[.*+?^$()|[\]{}\\]/g,'\\  function numberedAgencyActions(value) {').replace(/\s+/g,'\\s+');
+    const regex=new RegExp('(^|[^A-Za-z0-9])('+escaped+')(?=$|[^A-Za-z0-9])','i');
+    const fragments=input.split(/(<[^>]*>)/g);
+    let changed=false;
+    for(let i=0;i<fragments.length;i+=2){
+      if(!regex.test(fragments[i]))continue;
+      fragments[i]=fragments[i].replace(regex,(_,prefix)=>prefix+suggested);
+      changed=true;
+      break;
+    }
+    return {html:changed?fragments.join(''):input,changed};
+  }
+  window.ccReplaceSuggestedPlantillaTitle=replaceSuggestedPlantillaTitle;
 
   function numberedAgencyActions(value) {
     const parsed=[];
@@ -113,7 +136,8 @@
 
   function validateCharterData(data) {
     const issues = [];
-    const add = (section, label, message, target) => issues.push({ section, label, message, target });
+    const add = (section, label, message, target, fix = null) =>
+      issues.push({section,label,message,target,...(fix?{fix}:{})});
 
     if (!data || typeof data !== 'object' || Array.isArray(data)) {
       add('File', 'Data format', 'This file does not contain valid Citizen Charter data.', null);
@@ -236,13 +260,19 @@
             message='Enter a title from the plantilla list and the responsible office.';
           }else if(responsibleIssue.kind==='office'){
             message='Add the responsible office, section, or unit. List the plantilla title(s) above it.';
-          }else if(responsibleIssue.title){
-            message='“'+responsibleIssue.title+'” was not found in the plantilla list.'+
-              (responsibleIssue.suggestion?' Suggested title: “'+responsibleIssue.suggestion+'”.':' Check the exact approved title and position level.');
+          }else if(responsibleIssue.invalidTitles?.length){
+            // Surface each invalid title so each suggestion can be accepted.
+            responsibleIssue.invalidTitles.forEach(({title,suggestion})=>{
+              const detail='“'+title+'” is not in the supplied plantilla list.'+
+                (suggestion?' Suggested title: “'+suggestion+'”.':' Verify the exact title and grade.');
+              add('Process Overview','Step '+n+': Person Responsible',detail,cell(5),
+                suggestion?{kind:'plantilla',from:title,to:suggestion}:null);
+            });
+            message=null;
           }else{
             message='Enter an approved plantilla position title above the responsible office.';
           }
-          add('Process Overview','Step '+n+': Person Responsible',message,cell(5));
+          if(message) add('Process Overview','Step '+n+': Person Responsible',message,cell(5));
         }
 
       });
