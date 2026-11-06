@@ -12,6 +12,13 @@ The Builder's existing functionality remains intact: CKEditor, requirements and 
 
 ## Citizen Charter Readiness Check
 
+### JSON Open reliability (November 6, 2026)
+
+**Open** now uses a single Builder-owned file handler instead of competing legacy/import-inspector handlers. It accepts complete saved charters and structurally valid but incomplete drafts; draft imports show precise JSON field/value explanations and must explicitly be opened for correction. Normalization supports previous backups using `requirement`/`whereToSecure`, `fees`/`time`/`person`, `whoMayAvail`, and `transactionTypes`. Missing text entries remain empty for the user to correct—never silently filled as compliant. Corrupt JSON and incompatible objects are rejected without overwriting the active form. The file picker is reset after each attempt so users can retry the same file. On-screen validation and PDF/JSON final-output blocking remain intact.
+
+Run `node tests/json-open-regression.test.cjs` to verify direct and correction-only imports.
+
+
 The Builder has a **Check Readiness** action. Each issue identifies its **exact input or table cell**, with a **Go to field** button that scrolls to and focuses the visible editor. Invalid fields are highlighted, with correction text beside the actual entry. A compact **Review issues** control remains accessible while errors exist and disappears after correction. **Save** (JSON) and **Preview / Save as PDF** run the same check before producing any final output. **Open** immediately rejects malformed or unrelated JSON files. For recognizable but incomplete Citizen Charter JSON, a dedicated import review identifies the exact JSON property (for example `processOverview[1].personResponsible`) and displays its current stored value and expected correction. The user may choose **Open for correction** to load it as an editable draft; this does not bypass the checks on Save or PDF export. The current form is not replaced unless the user selects that action (and confirms when the form already has entries).
 
 Checked items include service details, classification, transaction type, eligibility, requirement documents and copy details (or explicit **None**), process-step actions, fees and processing time, responsible-person designation and office, and totals. For a free service enter **None** in each applicable Fees cell **and** Total Fees. A blank fee is not silently treated as free.
