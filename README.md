@@ -12,6 +12,13 @@ The Builder's existing functionality remains intact: CKEditor, requirements and 
 
 ## Citizen Charter Readiness Check
 
+### Client Step continuations and responsible plantilla positions
+
+A single numbered **Client Step** may span multiple numbered **Agency Actions**. Enter the client step on the first row (for example **1. Submit request**), then intentionally leave the Client Steps cells blank on subsequent rows if their agency actions continue in order as **1.2**, **1.3**, **1.4**, etc. The checker rejects a blank initial client step or an unrelated, out-of-sequence action. A new client step starts a new group.
+
+**Person Responsible** accepts multiple official plantilla positions in one cell, including a line-by-line list followed by the shared office (for example **Nurse Attendant II**, **Administrative Aide IV**, and **IMISS Office**). The checker still warns about missing offices and names without recognizable position titles. Automated matching is not an authoritative plantilla registry; confirm actual positions with the agency's approved plantilla records.
+
+
 ### JSON Open reliability (November 6, 2026)
 
 **Open** now uses a single Builder-owned file handler instead of competing legacy/import-inspector handlers. It accepts complete saved charters and structurally valid but incomplete drafts; draft imports show precise JSON field/value explanations and must explicitly be opened for correction. Normalization supports previous backups using `requirement`/`whereToSecure`, `fees`/`time`/`person`, `whoMayAvail`, and `transactionTypes`. Missing text entries remain empty for the user to correct—never silently filled as compliant. Corrupt JSON and incompatible objects are rejected without overwriting the active form. The file picker is reset after each attempt so users can retry the same file. On-screen validation and PDF/JSON final-output blocking remain intact.
