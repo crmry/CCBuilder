@@ -24,6 +24,13 @@ These rules check completeness of the entry and are not a substitute for verifyi
 
 ### Approved plantilla position reference
 
+### Suggested plantilla title corrections
+
+When one or more **Person Responsible** entries use a near-match for an approved title, CCMain lists **each** unmatched title and offers a **Use suggested title** action (labelled **Apply: [approved title]**) beside the error in the Readiness dialog and inline field warning. If at least two safe matches are present, **Apply all suggested titles** explicitly accepts those suggestions together. Nothing is silently rewritten merely by running validation, opening a draft, or downloading a document.
+
+Corrections operate only on the specific matching title text in the relevant CKEditor Person Responsible cell. They retain other plantilla positions, office names, HTML tags, line breaks and formatting, and do not alter the user's original JSON file on disk. After applying, the checker recomputes the remaining issues. Unrecognized entries without sufficiently close approved titles continue to require manual correction. The source catalogue and grading distinctions are unchanged.
+
+
 The **Person Responsible** check uses the **130-title plantilla list supplied for this CCMain project**, embedded in `assets/plantilla-positions.js`. The list is bundled locally and does not contact an external server. The system compares each entered title against the reference using case-insensitive and whitespace-tolerant matching, while preserving the actual position title and grade. It accepts multiple titles followed by the responsible office/section/unit; office names are not compared against the list.
 
 Unrecognized titles are flagged with the original text and, when a close match is found, a suggested title. No title or office is automatically overwritten. For example, **Nurse Attendant II** is not in the supplied list; **Nursing Attendant II** is. The supplied list includes both **Seamstress** and **Seamtress**, and these spellings are retained until the authoritative source is revised.
