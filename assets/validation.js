@@ -184,7 +184,7 @@
           // agency row was unnumbered, or its number was formatted differently.
           const continued = index > 0 && activeClientStep !== null &&
             firstAction && firstAction.major === activeClientStep &&
-            firstAction.minor >= 2;
+            firstAction.minor >= 1;
           if (!continued) {
             add('Process Overview','Step '+n+': Client Steps',
               'Enter a new client action only when the client must do something new. Otherwise, leave it blank when Agency Actions continue the active step (such as 1.2, 1.3, 1.4).',cell(1));
