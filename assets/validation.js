@@ -80,7 +80,8 @@
   function numberedAgencyActions(value) {
     const parsed=[];
     for(const line of editorLines(value)){
-      const m=line.match(/^(?:[-•]\s*)?(\d+)\.(\d+)(?=\s|[):.-]|$)/);
+      // Accept 1.2 Assess, 1.2Assess and rich-text versions of either.
+      const m=line.match(/^(?:[-•]\s*)?(\d+)\s*\.\s*(\d+)(?!\d)/);
       if(m)parsed.push({major:Number(m[1]),minor:Number(m[2])});
     }
     return parsed;
@@ -178,21 +179,31 @@
           activeClientStep = explicitNumber !== null ? explicitNumber :
             (firstAction ? firstAction.major : null);
         } else {
-          // The continuation row intentionally leaves Client Steps empty.
-          // Agency Actions must continue the previous 1.1, 1.2, 1.3...
+          // A numbered agency sub-action belongs to its active Client Step.
+          // Do not reject a blank Client Steps cell simply because a previous
+          // agency row was unnumbered, or its number was formatted differently.
           const continued = index > 0 && activeClientStep !== null &&
-            firstAction && lastAgencyAction &&
-            firstAction.major === activeClientStep &&
-            firstAction.major === lastAgencyAction.major &&
-            firstAction.minor === lastAgencyAction.minor+1;
+            firstAction && firstAction.major === activeClientStep &&
+            firstAction.minor >= 2;
           if (!continued) {
             add('Process Overview','Step '+n+': Client Steps',
-              'Enter a client step, or leave it blank only when Agency Actions continue the prior step (for example 1.1, 1.2, 1.3).',cell(1));
+              'Enter a new client action only when the client must do something new. Otherwise, leave it blank when Agency Actions continue the active step (such as 1.2, 1.3, 1.4).',cell(1));
           }
         }
         if (!filled(entry.agencyActions)) {
           add('Process Overview','Step '+n+': Agency Actions',
             'Describe the action of agency personnel.',cell(2));
+        }
+        // If the agency sequence itself skips or repeats a numbered action,
+        // highlight Agency Actions (not the intentionally blank Client Steps).
+        if (!hasClientStep && firstAction && lastAgencyAction &&
+            firstAction.major === lastAgencyAction.major &&
+            firstAction.major === activeClientStep &&
+            firstAction.minor !== lastAgencyAction.minor + 1) {
+          add('Process Overview','Step '+n+': Agency Actions',
+            'Check the agency-action numbering: after '+lastAgencyAction.major+'.'+lastAgencyAction.minor+
+            ', the next sub-action should be '+lastAgencyAction.major+'.'+(lastAgencyAction.minor+1)+
+            '. The Client Steps cell can remain blank.',cell(2));
         }
         lastAgencyAction = lastAction;
 
