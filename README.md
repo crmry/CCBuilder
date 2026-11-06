@@ -12,6 +12,15 @@ The Builder's existing functionality remains intact: CKEditor, requirements and 
 
 ## Citizen Charter Readiness Check
 
+### Approved plantilla position reference
+
+The **Person Responsible** check uses the **130-title plantilla list supplied for this CCMain project**, embedded in `assets/plantilla-positions.js`. The list is bundled locally and does not contact an external server. The system compares each entered title against the reference using case-insensitive and whitespace-tolerant matching, while preserving the actual position title and grade. It accepts multiple titles followed by the responsible office/section/unit; office names are not compared against the list.
+
+Unrecognized titles are flagged with the original text and, when a close match is found, a suggested title. No title or office is automatically overwritten. For example, **Nurse Attendant II** is not in the supplied list; **Nursing Attendant II** is. The supplied list includes both **Seamstress** and **Seamtress**, and these spellings are retained until the authoritative source is revised.
+
+**Source governance:** the user-supplied list is the validation reference, not independent proof that a job title is an authorized government position or that personnel hold that position. Updates to the agency's actual plantilla should also update the bundled list and its tests. An unavailable reference prevents a clean readiness result rather than silently treating an unverified title as valid.
+
+
 ### Client Step continuations and responsible plantilla positions
 
 A single numbered **Client Step** may span multiple numbered **Agency Actions**. Enter the client step on the first row (for example **1. Submit request**), then intentionally leave the Client Steps cells blank on subsequent rows if their agency actions continue in order as **1.2**, **1.3**, **1.4**, etc. The checker rejects a blank initial client step or an unrelated, out-of-sequence action. A new client step starts a new group.
