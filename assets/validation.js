@@ -40,7 +40,7 @@
     let positions=clauses;
 
     const last=clauses[clauses.length-1];
-    if(last && !reference.match(last) && officeWords.test(last)){
+    if(clauses.length>1 && last && !reference.match(last) && officeWords.test(last)){
       office=last;
       positions=clauses.slice(0,-1);
     }
@@ -65,6 +65,7 @@
         positions=[proposed.role];
       }
     }
+    if(!office && clauses.length===1 && officeWords.test(last) && !reference.match(last))return {kind:'position'};
     if(!office)return {kind:'office'};
     if(!positions.length)return {kind:'position'};
 
