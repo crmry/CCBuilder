@@ -230,6 +230,8 @@ const wrongGrade=copy();
 wrongGrade.processOverview[0].personResponsible='<p>Administrative Aide II</p><p>IMISS Office</p>';
 assert(validate(wrongGrade).some(x=>x.label.includes('Person Responsible')),
   'Grade absent from supplied positions must be rejected');
+assert.equal(sandbox.window.CCPlantillaPositions.closest('Administrative Aide II'),null,
+  'Do not suggest a different position family or grade for a missing title');
 
 const unknownWithOffice=copy();
 unknownWithOffice.processOverview[0].personResponsible='<p>Juan Dela Cruz</p><p>IMISS Office</p>';
