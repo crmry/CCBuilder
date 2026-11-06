@@ -160,8 +160,10 @@ assert(validate(missingInitialStep).some(issue=>issue.label.includes('Client Ste
 
 const skippedSubaction=JSON.parse(JSON.stringify(continued));
 skippedSubaction.processOverview[1].agencyActions='<p>1.3 Assess and classify request</p>';
-assert(validate(skippedSubaction).some(issue=>issue.label.includes('Step 2: Client Steps')),
-  'Skipped sub-action number must not silently authorize a blank Client Step');
+assert(validate(skippedSubaction).some(issue=>issue.label.includes('Step 2: Agency Actions')),
+  'Skipped numbering belongs to Agency Actions, not intentionally blank Client Steps');
+assert(!validate(skippedSubaction).some(issue=>issue.label.includes('Step 2: Client Steps')),
+  'A skipped sub-action must not create a misleading Client Steps warning');
 
 const mismatchedSubaction=JSON.parse(JSON.stringify(continued));
 mismatchedSubaction.processOverview[1].agencyActions='<p>2.1 Assess and classify request</p>';
@@ -313,3 +315,60 @@ assert(validate(ordinaryCertificate).some(issue=>issue.label.includes('Copy deta
   'Traditional documentary requirements still need copy details');
 
 console.log('Online and standard-form copy validation: 11 cases passed.');
+
+
+// Regression from actual screenshots: 1.2Assess (no space), followed by 1.3
+// and 1.4, shares Client Step 1; a Client Experience Survey starts Step 2.
+const screenshot=copy();
+screenshot.processOverview[0].clientSteps='<p>1. Submit the Job Order Request Form to the IMISS Office</p>';
+screenshot.processOverview[0].agencyActions='<p>1. Receive and acknowledge the request</p>';
+screenshot.processOverview.push(
+  {clientSteps:'<p>&nbsp;</p>',
+   agencyActions:'<p>1.2Assess and classify request (Urgent or Non-Urgent) and endorse to IMISS Head</p>',
+   feesToBePaid:'None',processingTime:'10 minutes',
+   personResponsible:'<p>Administrative Aide IV</p><p>IMISS Office</p>'},
+  {clientSteps:'',agencyActions:'<p>1.3 Evaluate Job Order Request for approval or disapproval</p>',
+   feesToBePaid:'None',processingTime:'10 minutes',
+   personResponsible:'<p>Supervising Health Program Officer</p><p>IMISS Office</p>'},
+  {clientSteps:'',agencyActions:'<p>1.4 Troubleshooting and corrective actions</p><ul><li>Network outages</li></ul>',
+   feesToBePaid:'None',processingTime:'15 minutes',
+   personResponsible:'<p>Computer Maintenance Technologist III</p><p>IMISS Office</p>'},
+  {clientSteps:'<p>2. Answer the Client Experience Survey Form</p>',
+   agencyActions:'<p>2. IHOMS staff administer the Client Experience Survey.</p>',
+   feesToBePaid:'None',processingTime:'10 minutes',
+   personResponsible:'<p>Administrative Aide IV</p><p>IMISS Office</p>'}
+);
+assert.equal(validate(screenshot).length,0,
+  'Screenshot sequence with glued 1.2Assess, subsequent blank rows, and Client Step 2 must pass');
+
+const gluedNumberAfterRichText=copy();
+gluedNumberAfterRichText.processOverview[0].agencyActions='<p>1.1 Review form</p>';
+gluedNumberAfterRichText.processOverview.push({
+  clientSteps:'',agencyActions:'<p><strong>1.2</strong>Assess completeness</p>',
+  feesToBePaid:'None',processingTime:'10 minutes',personResponsible:'Administrative Officer V, Records Section'
+});
+assert.equal(validate(gluedNumberAfterRichText).length,0,
+  'Number and text separated only by HTML formatting must be recognized as 1.2');
+
+const sameGroupNumber=copy();
+sameGroupNumber.processOverview.push({
+  clientSteps:'',agencyActions:'<p>2.2 Assess request</p>',
+  feesToBePaid:'None',processingTime:'10 minutes',personResponsible:'Administrative Officer V, Records Section'
+});
+assert(validate(sameGroupNumber).some(issue=>issue.label.includes('Step 2: Client Steps')),
+  'Agency Action 2.2 must not continue Client Step 1');
+
+const missingInitialClient=JSON.parse(JSON.stringify(screenshot));
+missingInitialClient.processOverview[0].clientSteps='';
+assert(validate(missingInitialClient).some(issue=>issue.label.includes('Step 1: Client Steps')),
+  'Initial client step remains mandatory');
+
+const duplicatedAction=JSON.parse(JSON.stringify(gluedNumberAfterRichText));
+duplicatedAction.processOverview[1].agencyActions='1.1 Repeat assessment';
+const duplicationIssues=validate(duplicatedAction);
+assert(duplicationIssues.some(issue=>issue.label.includes('Step 2: Agency Actions')),
+  'Repeated agency action number must be flagged under Agency Actions');
+assert(!duplicationIssues.some(issue=>issue.label.includes('Step 2: Client Steps')),
+  'Repeated agency action number must not incorrectly mark Client Steps');
+
+console.log('Screenshot continuation regression: 6 cases passed.');
