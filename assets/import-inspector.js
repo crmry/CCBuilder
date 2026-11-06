@@ -84,7 +84,6 @@
     '.cc-json-item{border:1px solid #dfe6ef;border-radius:8px;padding:10px 12px;margin:7px 0}'+
     '.cc-json-item strong{display:block;font-size:13px;color:#26364b}'+
     '.cc-json-item p{font-size:12px;line-height:1.45;color:#64748b;margin:4px 0}'+
-    '.cc-json-path{display:block;font:600 11.5px/1.5 ui-monospace,Consolas,monospace;color:#2d5888;overflow-wrap:anywhere;margin:6px 0 3px}'+
     '.cc-json-found{font-size:12px;color:#475569;overflow-wrap:anywhere}'+
     '.cc-json-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;border-top:1px solid #e2e8f0;padding:13px 24px}'+
     '.cc-json-foot small{color:#64748b}'+
@@ -123,8 +122,8 @@
   function present(fileName,issues,data,correctable,loadDraft) {
     heading.textContent=correctable?'File needs correction':'File cannot be opened';
     summary.textContent=correctable?
-      'The file is valid Citizen Charter JSON, but contains incomplete entries. Each issue identifies its JSON field and current value. Open it as a draft to correct the entries; final Save and PDF export remain blocked.':
-      'The file has invalid JSON syntax or structure. The current Builder form has not changed.';
+      'Some entries need correction. Review the issues and their current values below, then open the file to make changes. Saving and PDF export will remain unavailable until the Readiness Check passes.':
+      'This file could not be opened. Review the issue below. Your current work has not been changed.';
     filename.textContent='File: '+fileName;
     count.textContent=issues.length+(issues.length===1?' issue found':' issues found');
     edit.hidden=!correctable;
@@ -136,11 +135,14 @@
         const card=document.createElement('div');card.className='cc-json-item';
         const label=document.createElement('strong');label.textContent=issue.label;
         const message=document.createElement('p');message.textContent=issue.message;
-        const path=document.createElement('code');path.className='cc-json-path';
-        const key=jsonPath(issue);path.textContent='JSON field: '+(key||'$');
-        const found=document.createElement('div');found.className='cc-json-found';
-        found.textContent='Current value: '+(data===null?'(unavailable)':displayValue(data,key));
-        card.append(label,message,path,found);list.appendChild(card);
+        card.append(label,message);
+        if(data!==null) {
+          const key=jsonPath(issue);
+          const found=document.createElement('div');found.className='cc-json-found';
+          found.textContent='Current entry: '+displayValue(data,key);
+          card.appendChild(found);
+        }
+        list.appendChild(card);
       });
     }
     overlay.hidden=false;document.body.style.overflow='hidden';cancel.focus();
