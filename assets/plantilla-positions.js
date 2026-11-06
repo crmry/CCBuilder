@@ -163,7 +163,7 @@ Warehouseman III`.split('\n').map(s=>s.trim()).filter(Boolean));
       const score=1-distance(query,canonical)/Math.max(query.length,canonical.length);
       return {title,score};
     }).sort((a,b)=>b.score-a.score);
-    return matches[0]&&matches[0].score>=0.72?matches[0].title:null;
+    return matches[0]&&matches[0].score>=0.82?matches[0].title:null;
   }
   window.CCPlantillaPositions=Object.freeze({
     titles,normalize,match:(value)=>byName.get(normalize(value))||null,closest
